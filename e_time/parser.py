@@ -120,6 +120,11 @@ def parse(s):
     return tokens
 
 
+# def _get_now(local_tz=None, now=None):
+#     now = now or datetime.now()
+#     return local_tz.localize(now) if local_tz else now
+
+
 def convert_date(parsed_date):
     month = parsed_date[0]
     day = parsed_date[1]
@@ -182,3 +187,17 @@ def parse_single_event(when, local_tz=None):
         if ends_at is not None:
             ends_at = local_tz.localize(ends_at)
     return starts_at, ends_at
+
+
+# def parse_repeat_phrase(pharse, how_long, local_tz=None, now=None):
+#     """
+#     :param phrase: "Every Monday 7-9pm", "Every 3rd Tuesday 6-9pm", etc.
+#     :param how_long: (timedelta) For how long into the future should
+#         occurrences be generated
+#     :param local_tz: Optional local timezone (if not provided, naive datetimes
+#         will be returned)
+#     :param now: Optional current time (if not provided, the current time will
+#         be used)
+#     :return: iterable of datetime covering all occurrences between now
+#         and now + how_long
+#     """
