@@ -5,7 +5,7 @@ import sys
 
 from setuptools import find_packages, setup
 
-import e_contact
+import e_time
 
 VERSION = e_time.__version__
 
