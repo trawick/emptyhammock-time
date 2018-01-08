@@ -20,6 +20,17 @@ class TestSingleEvent(unittest.TestCase):
             ends_at
         )
 
+    def test_no_stop_time(self):
+        starts_at, ends_at = parse_single_event('january 13 9:45pm')
+        self.assertEqual(
+            datetime(2018, 1, 13, 21, 45),
+            starts_at
+        )
+        self.assertEqual(
+            None,
+            ends_at
+        )
+
 
 class TestTokenizing(unittest.TestCase):
 

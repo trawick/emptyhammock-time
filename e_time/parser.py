@@ -138,13 +138,21 @@ def convert_time(s):
 
 def convert_times(parsed_time):
     syntax = [t for t, _ in parsed_time]
-    if syntax == [Number, Dash, Number, AmPm]:
+
+    if syntax == [Number, Dash, Number, AmPm]:  # e.g. '7-9pm'
         start_hour, start_minute = convert_time(parsed_time[0][1])
         stop_hour, stop_minute = convert_time(parsed_time[2][1])
         if AmPm.is_pm(parsed_time[3][1]):
             start_hour += 12
             stop_hour += 12
         return start_hour, start_minute, stop_hour, stop_minute
+
+    if syntax == [Number, AmPm]:  # e.g. '9pm'
+        start_hour, start_minute = convert_time(parsed_time[0][1])
+        if AmPm.is_pm(parsed_time[1][1]):
+            start_hour += 12
+        return start_hour, start_minute, None, None
+
     raise ValueError('Unhandled time/range')
 
 
@@ -157,7 +165,7 @@ def combine_date_times(month, day, year, start_hour, start_minute, stop_hour, st
     return starts_at_naive, stops_at_naive
 
 
-def parse_single_event(when):
+def parse_single_event(when, local_tz=None):
     parsed = parse(when)
 
     if [parsed[0][0], parsed[1][0]] != [Month, Number]:
@@ -169,4 +177,8 @@ def parse_single_event(when):
     month, day, year = convert_date(parsed_date)
     times = convert_times(parsed_time)
     starts_at, ends_at = combine_date_times(month, day, year, *times)
+    if local_tz is not None:
+        starts_at = local_tz.localize(starts_at)
+        if ends_at is not None:
+            ends_at = local_tz.localize(ends_at)
     return starts_at, ends_at
