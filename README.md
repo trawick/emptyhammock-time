@@ -6,6 +6,8 @@
 
 This function parses a text string describing a single time range on a
 specified date, returning a tuple of start and end times (`datetime.datetime`).
+The year will be set to the current year, unless the optional argument `now`
+is provided, in which case the year will be extracted from that `datetime`.
 The second time will be `None` if only one time is specified by the string.
 
 Example input:

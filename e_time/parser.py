@@ -6,19 +6,22 @@ from .tokens_and_syntax import (
 )
 
 
-# def _get_now(local_tz=None, now=None):
-#     now = now or datetime.now()
-#     return local_tz.localize(now) if local_tz else now
+def _get_now(local_tz=None, now=None):
+    now = now or datetime.now()
+    return local_tz.localize(now) if local_tz else now
 
 
-# XXX stop hard-coding the year
-def convert_date(parsed_date):
+def convert_date(parsed_date, local_tz=None, now=None):
     month = parsed_date[0]
     day = parsed_date[1]
 
     month = Month.get_month_number(month[1])
     day = int(day[1])
-    return month, day, 2018
+
+    now = _get_now(local_tz, now)
+    # If using now.year doesn't work due to leap year considerations,
+    # we couldn't guess the year anyway.
+    return month, day, now.year
 
 
 def convert_time(s):
@@ -58,7 +61,7 @@ def combine_date_times(month, day, year, start_hour, start_minute, stop_hour, st
     return starts_at_naive, stops_at_naive
 
 
-def parse_single_event(when, local_tz=None):
+def parse_single_event(when, local_tz=None, now=None):
     parsed = parse(when)
 
     if [parsed[0][0], parsed[1][0]] != [Month, Number]:
@@ -67,7 +70,7 @@ def parse_single_event(when, local_tz=None):
     parsed_date = parsed[:2]
     parsed_time = parsed[2:]
 
-    month, day, year = convert_date(parsed_date)
+    month, day, year = convert_date(parsed_date, local_tz=local_tz, now=now)
     times = convert_times(parsed_time)
     starts_at, ends_at = combine_date_times(month, day, year, *times)
     if local_tz is not None:

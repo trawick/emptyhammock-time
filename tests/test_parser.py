@@ -11,25 +11,39 @@ from e_time.tokens_and_syntax import (
 )
 
 TIME_ZONE = 'US/Eastern'
+PYTZ_TIME_ZONE = pytz.timezone(TIME_ZONE)
 
 
 class TestSingleEvent(unittest.TestCase):
 
+    def setUp(self):
+        self.now = PYTZ_TIME_ZONE.localize(datetime.now())
+
     def test(self):
         starts_at, ends_at = parse_single_event('january 13 9-11pm')
         self.assertEqual(
-            datetime(2018, 1, 13, 21, 0),
+            datetime(self.now.year, 1, 13, 21, 0),
             starts_at
         )
         self.assertEqual(
-            datetime(2018, 1, 13, 23, 0),
+            datetime(self.now.year, 1, 13, 23, 0),
+            ends_at
+        )
+        not_now = self.now.replace(year=2015, day=1)
+        starts_at, ends_at = parse_single_event('january 13 9-11pm', now=not_now)
+        self.assertEqual(
+            datetime(not_now.year, 1, 13, 21, 0),
+            starts_at
+        )
+        self.assertEqual(
+            datetime(not_now.year, 1, 13, 23, 0),
             ends_at
         )
 
     def test_no_stop_time(self):
         starts_at, ends_at = parse_single_event('january 13 9:45pm')
         self.assertEqual(
-            datetime(2018, 1, 13, 21, 45),
+            datetime(self.now.year, 1, 13, 21, 45),
             starts_at
         )
         self.assertEqual(
@@ -41,19 +55,18 @@ class TestSingleEvent(unittest.TestCase):
 class TestTimeRange(unittest.TestCase):
 
     def test_em(self):
-        local_tz = pytz.timezone(TIME_ZONE)
-        now = local_tz.localize(datetime.now())
+        now = PYTZ_TIME_ZONE.localize(datetime.now())
         month = 12
         day = 31
         year = now.year
 
-        t_7pm = local_tz.localize(datetime(year, month, day, 19))
-        t_8pm = local_tz.localize(datetime(year, month, day, 20))
-        t_830pm = local_tz.localize(datetime(year, month, day, 20, 30))
-        t_9pm = local_tz.localize(datetime(year, month, day, 21))
-        t_930pm = local_tz.localize(datetime(year, month, day, 21, 30))
-        t_11pm = local_tz.localize(datetime(year, month, day, 23))
-        t_12am = local_tz.localize(datetime(year, month, day, 23) + timedelta(hours=1))
+        t_7pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 19))
+        t_8pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 20))
+        t_830pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 20, 30))
+        t_9pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 21))
+        t_930pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 21, 30))
+        t_11pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 23))
+        t_12am = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 23) + timedelta(hours=1))
         test_cases = (
             ('9pm-12am', t_9pm, t_12am),
             ('9pm', t_9pm, None),
@@ -68,7 +81,7 @@ class TestTimeRange(unittest.TestCase):
         )
         for time_range, expected_starts_at, expected_ends_at in test_cases:
             actual_starts_at, actual_ends_at = \
-                parse_time_range(month, day, year, time_range, local_tz)
+                parse_time_range(month, day, year, time_range, PYTZ_TIME_ZONE)
             self.assertEqual(
                 expected_starts_at, actual_starts_at,
                 'Determining starts_at failed for %s' % time_range
