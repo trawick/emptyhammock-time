@@ -1,5 +1,9 @@
 # Changes and migration requirements
 
+## Version 0.0.4
+
+* Better guessing of the year
+
 ## Version 0.0.3
 
 * `parse_single_event()` no longer hard-codes the year to 2018 :)  (expedience!)

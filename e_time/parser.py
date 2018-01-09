@@ -7,8 +7,24 @@ from .tokens_and_syntax import (
 
 
 def _get_now(local_tz=None, now=None):
-    now = now or datetime.now()
+    if now:
+        return now
+    now = datetime.now()
     return local_tz.localize(now) if local_tz else now
+
+
+def _guess_year(month, day, local_tz, now):
+    now = _get_now(local_tz, now)
+    # If using now.year doesn't work due to leap year considerations,
+    # we couldn't guess the year anyway.
+    then = datetime(now.year, month, day)
+    then = local_tz.localize(then) if local_tz else then
+    if now - then > timedelta(days=9*30):
+        return now.year + 1
+    elif then - now > timedelta(days=9*30):
+        return now.year - 1
+    else:
+        return now.year
 
 
 def convert_date(parsed_date, local_tz=None, now=None):
@@ -18,10 +34,7 @@ def convert_date(parsed_date, local_tz=None, now=None):
     month = Month.get_month_number(month[1])
     day = int(day[1])
 
-    now = _get_now(local_tz, now)
-    # If using now.year doesn't work due to leap year considerations,
-    # we couldn't guess the year anyway.
-    return month, day, now.year
+    return month, day, _guess_year(month, day, local_tz, now)
 
 
 def convert_time(s):
@@ -132,7 +145,9 @@ def both_times_stop_indicator(tokens):
     return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
 
 
-def parse_time_range(month, day, year, time_range, local_tz=None):
+def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
+    if year is None:
+        year = _guess_year(month, day, local_tz, now)
     parsed = parse(time_range)
     start_hour, start_minute, stop_hour, stop_minute = evaluate_by_syntax(
         time_range,

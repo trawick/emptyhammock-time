@@ -30,13 +30,15 @@ class TestSingleEvent(unittest.TestCase):
             ends_at
         )
         not_now = self.now.replace(year=2015, day=1)
-        starts_at, ends_at = parse_single_event('january 13 9-11pm', now=not_now)
+        starts_at, ends_at = parse_single_event(
+            'january 13 9-11pm', now=not_now, local_tz=PYTZ_TIME_ZONE
+        )
         self.assertEqual(
-            datetime(not_now.year, 1, 13, 21, 0),
+            PYTZ_TIME_ZONE.localize(datetime(not_now.year, 1, 13, 21, 0)),
             starts_at
         )
         self.assertEqual(
-            datetime(not_now.year, 1, 13, 23, 0),
+            PYTZ_TIME_ZONE.localize(datetime(not_now.year, 1, 13, 23, 0)),
             ends_at
         )
 
@@ -48,6 +50,40 @@ class TestSingleEvent(unittest.TestCase):
         )
         self.assertEqual(
             None,
+            ends_at
+        )
+
+    def test_early_next_year(self):
+        month = 12
+        day = 31
+        year = 2017
+        starts_at, ends_at = parse_single_event(
+            'january 1 9-11:30pm',
+            now=datetime(year, month, day, 13, 30)
+        )
+        self.assertEqual(
+            datetime(year + 1, 1, 1, 21, 0),
+            starts_at
+        )
+        self.assertEqual(
+            datetime(year + 1, 1, 1, 23, 30),
+            ends_at
+        )
+
+    def test_late_last_year(self):
+        month = 1
+        day = 1
+        year = 2018
+        starts_at, ends_at = parse_single_event(
+            'december 31 9-11:30pm',
+            now=datetime(year, month, day, 13, 30)
+        )
+        self.assertEqual(
+            datetime(year - 1, 12, 31, 21, 0),
+            starts_at
+        )
+        self.assertEqual(
+            datetime(year - 1, 12, 31, 23, 30),
             ends_at
         )
 
