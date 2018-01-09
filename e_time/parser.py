@@ -1,123 +1,9 @@
-import calendar
-from datetime import datetime
-import re
+from datetime import datetime, timedelta
 
-
-class BaseToken(object):
-    subclasses = []
-
-    @classmethod
-    def prep_val(cls, val):
-        return val
-
-
-class Whitespace(BaseToken):
-    subclasses = []
-    pat = r'^[ \t]+$'
-
-
-class String(BaseToken):
-    subclasses = []
-    pat = r'^[A-Za-z]+$'
-    values = []
-
-    @classmethod
-    def is_it(cls, val):
-        return cls.prep_val(val) in cls.values
-
-
-class Month(String):
-    values = [m.lower() for m in calendar.month_name if m != ''] + \
-             [m.lower() for m in calendar.month_abbr if m != '']
-
-    @classmethod
-    def prep_val(cls, val):
-        return val.lower()
-
-    @classmethod
-    def get_month_number(cls, val):
-        orig_val = val
-        val = val.lower()
-        for i in (calendar.month_abbr, calendar.month_name):
-            for x, m in enumerate(i):
-                if m.lower() == val:
-                    return x
-        raise ValueError('Invalid month "%s"' % orig_val)
-
-
-class Day(String):
-    values = list(calendar.day_name)
-
-
-class AmPm(String):
-    values = ['am', 'pm']
-
-    @classmethod
-    def prep_val(cls, val):
-        return val.lower()
-
-    @classmethod
-    def is_pm(cls, val):
-        return val.lower() == 'pm'
-
-
-String.subclasses.append(Day)
-String.subclasses.append(AmPm)
-String.subclasses.append(Month)
-
-
-class Number(BaseToken):
-    subclasses = []
-    pat = r'^[0-9:]+$'
-
-
-class Dash(BaseToken):
-    subclasses = []
-    pat = r'^[-–—]+$'
-
-
-types = [Whitespace, String, Number, Dash]
-
-
-def find_type(val):
-    for cl in types:
-        if re.match(cl.pat, val):
-            return cl
-    raise ValueError('bad token: "%s"' % val)
-
-
-def get_token(s):
-    chars = iter(s)
-    st, val = None, ''
-    while True:
-        try:
-            n = next(chars)
-        except StopIteration:
-            yield st, val
-            break
-        if st and re.match(st.pat, val + n):
-            val += n
-            continue
-        if val != '':
-            yield st, val
-        val = n
-        st = find_type(val)
-
-
-def get_most_specific(t, v):
-    for subclass in t.subclasses:
-        if subclass.is_it(v):
-            return subclass, v
-    return t, v
-
-
-def parse(s):
-    tokens = [
-        get_most_specific(t, v)
-        for t, v in get_token(s)
-        if t != Whitespace
-    ]
-    return tokens
+from .tokens_and_syntax import (
+    Month, Number, Dash, AmPm,
+    evaluate_by_syntax, parse
+)
 
 
 # def _get_now(local_tz=None, now=None):
@@ -125,6 +11,7 @@ def parse(s):
 #     return local_tz.localize(now) if local_tz else now
 
 
+# XXX stop hard-coding the year
 def convert_date(parsed_date):
     month = parsed_date[0]
     day = parsed_date[1]
@@ -135,12 +22,13 @@ def convert_date(parsed_date):
 
 
 def convert_time(s):
-    vals = list(map(int, s.split(':')))
-    if len(vals) == 1:
-        return vals[0], 0
-    return vals[0], vals[1]
+    values = list(map(int, s.split(':')))
+    if len(values) == 1:
+        return values[0], 0
+    return values[0], values[1]
 
 
+# XXX refactor this to combine logic with parse_time_range()
 def convert_times(parsed_time):
     syntax = [t for t, _ in parsed_time]
 
@@ -189,7 +77,91 @@ def parse_single_event(when, local_tz=None):
     return starts_at, ends_at
 
 
-# def parse_repeat_phrase(pharse, how_long, local_tz=None, now=None):
+def time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value):
+    start_hour, start_minute = convert_time(start_time_value)
+    if AmPm.is_pm(start_indicator_value):
+        start_hour += 12
+    elif start_hour == 12:  # 12am
+        start_hour = 0
+    if stop_time_value is None:
+        return start_hour, start_minute, None, None
+    stop_hour, stop_minute = convert_time(stop_time_value)
+    if AmPm.is_pm(stop_indicator_value):
+        stop_hour += 12
+    elif stop_hour == 12:  # 12am
+        stop_hour = 0
+    return start_hour, start_minute, stop_hour, stop_minute
+
+
+def start_time_only(tokens):
+    values = [token[1] for token in tokens]
+    start_time_value = values[0]
+    start_indicator_value = values[1]
+    stop_time_value = None
+    stop_indicator_value = None
+    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+
+
+def both_times_both_indicators(tokens):
+    values = [token[1] for token in tokens]
+    start_time_value = values[0]
+    start_indicator_value = values[1]
+    stop_time_value = values[3]
+    stop_indicator_value = values[4]
+    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+
+
+def both_times_start_indicator(tokens):
+    values = [token[1] for token in tokens]
+    start_time_value = values[0]
+    start_indicator_value = values[1]
+    stop_time_value = values[3]
+    stop_indicator_value = values[1]
+    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+
+
+def both_times_stop_indicator(tokens):
+    values = [token[1] for token in tokens]
+    start_time_value = values[0]
+    start_indicator_value = values[3]
+    stop_time_value = values[2]
+    stop_indicator_value = values[3]
+    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+
+
+def parse_time_range(month, day, year, time_range, local_tz=None):
+    parsed = parse(time_range)
+    start_hour, start_minute, stop_hour, stop_minute = evaluate_by_syntax(
+        time_range,
+        parsed, (
+            ([Number, AmPm], start_time_only),
+            ([Number, AmPm, Dash, Number, AmPm], both_times_both_indicators),
+            ([Number, AmPm, Dash, Number], both_times_start_indicator),
+            ([Number, Dash, Number, AmPm], both_times_stop_indicator),
+        )
+    )
+    try:
+        start_time = datetime(year, month, day, start_hour, start_minute)
+    except ValueError as e:
+        raise ValueError('Error parsing time range "%s": %s' % (
+            time_range, e
+        )) from e
+    if local_tz:
+        start_time = local_tz.localize(start_time)
+
+    if stop_hour is not None:
+        stop_time = datetime(year, month, day, stop_hour, stop_minute)
+        if local_tz:
+            stop_time = local_tz.localize(stop_time)
+        if stop_time < start_time:
+            stop_time += timedelta(days=1)
+    else:
+        stop_time = None
+
+    return start_time, stop_time
+
+
+# def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
 #     """
 #     :param phrase: "Every Monday 7-9pm", "Every 3rd Tuesday 6-9pm", etc.
 #     :param how_long: (timedelta) For how long into the future should

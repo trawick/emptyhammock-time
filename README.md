@@ -1,14 +1,14 @@
 # emptyhammock-time
 
-## Time-related utilities for Python
+## Time-related utilities for Python 3
 
 ### `parse_single_event()`
 
-This function parses a text string describing a single time range, returning
-a tuple of start and end times (`datetime.datetime`).  The second time will
-be `None` if only one time is specified by the string.
+This function parses a text string describing a single time range on a
+specified date, returning a tuple of start and end times (`datetime.datetime`).
+The second time will be `None` if only one time is specified by the string.
 
-Example string input:
+Example input:
 
 * `parse_single_event('january 13 9-11pm')`
 * `parse_single_event('january 13 9:45pm')`
@@ -21,6 +21,21 @@ the optional parameter `local_tz`:
     from e_time import parse_single_event
     us_eastern = pytz.timezone('US/Eastern')
     starts_at, _ = parse_single_event('january 13 9:45pm', local_tz=us_eastern)
+```
+
+### `parse_time_range()`
+
+This function parses a text string describing a single time range, returning
+a tuple of start and end times (`datetime.datetime`) for the date specified
+in arguments to the function.
+
+Example use with the optional time zone argument:
+
+```python
+    import pytz
+    from e_time import parse_time_range
+    us_eastern = pytz.timezone('US/Eastern')
+    starts_at, ends_at = parse_time_range(1, 15, 2018, '9pm-12am', local_tz=us_eastern)
 ```
 
 ## Support
