@@ -4,10 +4,10 @@ import unittest
 import pytz
 
 from e_time.parser import (
-    parse, parse_single_event, parse_time_range,
+    parse, parse_repeat_phrase, parse_single_event, parse_time_range,
 )
 from e_time.tokens_and_syntax import (
-    AmPm, Dash, Day, Month, Number, String,
+    AmPm, Dash, Day, Days, Month, Number, String,
 )
 
 TIME_ZONE = 'US/Eastern'
@@ -135,6 +135,7 @@ class TestTokenizing(unittest.TestCase):
             ('Dec 29 7-9pm', (Month, Number, Number, Dash, Number, AmPm)),
             ('dec 31 7pm-9', (Month, Number, Number, AmPm, Dash, Number)),
             ('Every Monday 7-9pm', (String, Day, Number, Dash, Number, AmPm)),
+            ('Mondays 8:30pm', (Days, Number, AmPm)),
             ('january 13 9-11pm', (Month, Number, Number, Dash, Number, AmPm)),
             ('9pm', (Number, AmPm)),
             ('9 PM - 12 AM', (Number, AmPm, Dash, Number, AmPm)),
@@ -146,3 +147,24 @@ class TestTokenizing(unittest.TestCase):
             actual = parse(sample)
             actual_syntax = [x for x, _ in actual]
             self.assertEqual(actual_syntax, expected_syntax, 'Checking "%s"' % sample)
+
+
+class TestRepeatPhrase(unittest.TestCase):
+
+    def test(self):
+        now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 5, 19))
+        phrase = '1st and 3rd Wednesdays 8:30pm'
+        rv = parse_repeat_phrase(
+            phrase, timedelta(days=31), local_tz=PYTZ_TIME_ZONE, now=now
+        )
+        occurrence_1 = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 7, 20, 30))
+        occurrence_2 = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 21, 20, 30))
+        occurrence_3 = PYTZ_TIME_ZONE.localize(datetime(2018, 4, 4, 20, 30))
+        self.assertEqual(
+            [
+                (occurrence_1, None),
+                (occurrence_2, None),
+                (occurrence_3, None),
+            ],
+            rv
+        )

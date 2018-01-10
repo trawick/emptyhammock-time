@@ -12,7 +12,7 @@ class BaseToken(object):
 
 class Whitespace(BaseToken):
     subclasses = []
-    pat = r'^[ \t]+$'
+    pat = r'^[ \t\u00A0]+$'
 
 
 class String(BaseToken):
@@ -47,6 +47,21 @@ class Month(String):
 class Day(String):
     values = list(calendar.day_name)
 
+    @classmethod
+    def get_day_of_week(cls, value):
+        return cls.values.index(value)
+
+
+class Days(String):
+    values = [
+        '%ss' % day_name
+        for day_name in calendar.day_name
+    ]
+
+    @classmethod
+    def get_day_of_week(cls, value):
+        return Day.get_day_of_week(value[:-1])
+
 
 class AmPm(String):
     values = ['am', 'pm']
@@ -60,6 +75,7 @@ class AmPm(String):
         return val.lower() == 'pm'
 
 
+String.subclasses.append(Days)
 String.subclasses.append(Day)
 String.subclasses.append(AmPm)
 String.subclasses.append(Month)
@@ -110,7 +126,7 @@ def _get_most_specific(t, v):
     return t, v
 
 
-def parse(s):
+def parse(s, ignore_whitespace=True):
     """
     Parse a string of time-related tokens, including
     * general string
@@ -120,12 +136,14 @@ def parse(s):
     * dash/hyphen
     * number (integer or time of day)
     :param s: string to be parsed
+    :param ignore_whitespace: whether or not to remove whitespace tokens
+        before returning
     :return: sequence of type/value tuples
     """
     tokens = [
         _get_most_specific(t, v)
         for t, v in _get_token(s)
-        if t != Whitespace
+        if t != Whitespace or not ignore_whitespace
     ]
     return tokens
 

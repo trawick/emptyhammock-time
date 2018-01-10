@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from .tokens_and_syntax import (
-    Month, Number, Dash, AmPm,
+    Days, Month, Number, Dash, AmPm, String, Whitespace,
     evaluate_by_syntax, parse
 )
 
@@ -179,15 +179,67 @@ def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
     return start_time, stop_time
 
 
-# def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
-#     """
-#     :param phrase: "Every Monday 7-9pm", "Every 3rd Tuesday 6-9pm", etc.
-#     :param how_long: (timedelta) For how long into the future should
-#         occurrences be generated
-#     :param local_tz: Optional local timezone (if not provided, naive datetimes
-#         will be returned)
-#     :param now: Optional current time (if not provided, the current time will
-#         be used)
-#     :return: iterable of datetime covering all occurrences between now
-#         and now + how_long
-#     """
+class RepeatedDay(object):
+
+    def __init__(self, day_of_week, occurrences_of_day, time_range):
+        self.day_of_week = day_of_week[0].get_day_of_week(day_of_week[1])  # can be Day or Days
+        self.occurrences_of_day = [int(x) for _, x in occurrences_of_day]
+        self.time_range = time_range
+
+
+def _repeat_phrase_1(tokens):
+    values = [token[1] for token in tokens]
+    assert len(values[1]) == len(values[6]) == 2  # 'st', 'nd', 'rd', etc.
+    assert values[3] == 'and'
+    repeat = RepeatedDay(
+        tokens[8],
+        [tokens[0], tokens[5]],
+        values[10] + values[11],
+    )
+    return repeat
+
+
+def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
+    """
+    :param phrase: "1st and 3rd Wednesdays 8:30pm", etc.
+    :param how_long: (timedelta) For how long into the future should
+        occurrences be generated
+    :param local_tz: Optional local timezone (if not provided, naive datetimes
+        will be returned)
+    :param now: Optional current time (if not provided, the current time will
+        be used)
+    :return: iterable of tuples of begin/end datetime covering all occurrences
+        between now and now + how_long
+    """
+    parsed = parse(phrase, ignore_whitespace=False)
+    repeat = evaluate_by_syntax(
+        phrase,
+        parsed, (
+            # '1st and 3rd Wednesdays 8:30pm'
+            ([
+                 Number, String, Whitespace, String, Whitespace, Number,
+                 String, Whitespace, Days, Whitespace, Number, AmPm
+             ], _repeat_phrase_1,),
+        ),
+    )
+    occurrences = []
+    current = _get_now(local_tz, now)
+    last = current + how_long
+    while current < last:
+        if current.weekday() == repeat.day_of_week:
+            # Okay, it is the correct day of the week, but it might not be the right occurrence.
+            for occurrence in repeat.occurrences_of_day:
+                max_dom = 7 * occurrence  # 3rd Monday can't be later than 21st
+                min_dom = max_dom - 6  # or earlier than 15th
+                if min_dom <= current.day <= max_dom:
+                    # It is happening today!
+                    occurrences.append(
+                        parse_time_range(
+                            current.month, current.day, current.year, repeat.time_range,
+                            local_tz, now,
+                        )
+                    )
+
+        current += timedelta(days=1)
+
+    return occurrences
