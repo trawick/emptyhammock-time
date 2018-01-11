@@ -1,5 +1,10 @@
 # Changes and migration requirements
 
+## Version 0.0.6
+
+* `parse_repeat_phrase()` now supports phrases like `1st Fridays 8:30pm-12:30am`.
+* `parse_repeat_phrase()` is now a generator.  It no longer returns a list.
+
 ## Version 0.0.5
 
 * Non-breaking space (\u00A0) treated like other whitespace

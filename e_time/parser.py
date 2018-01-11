@@ -199,6 +199,17 @@ def _repeat_phrase_1(tokens):
     return repeat
 
 
+def _repeat_phrase_2(tokens):
+    values = [token[1] for token in tokens]
+    assert len(values[1]) == 2  # 'st', 'nd', 'rd', etc.
+    repeat = RepeatedDay(
+        tokens[3],
+        [tokens[0]],
+        values[5] + values[6] + values[7] + values[8] + values[9],
+    )
+    return repeat
+
+
 def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
     """
     :param phrase: "1st and 3rd Wednesdays 8:30pm", etc.
@@ -220,9 +231,14 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
                  Number, String, Whitespace, String, Whitespace, Number,
                  String, Whitespace, Days, Whitespace, Number, AmPm
              ], _repeat_phrase_1,),
+            # '1st Fridays 8:30pm-12:30am'
+            ([
+                 Number, String, Whitespace, Days, Whitespace,
+                 Number, AmPm, Dash, Number, AmPm,
+             ], _repeat_phrase_2,),
         ),
     )
-    occurrences = []
+
     current = _get_now(local_tz, now)
     last = current + how_long
     while current < last:
@@ -233,13 +249,9 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
                 min_dom = max_dom - 6  # or earlier than 15th
                 if min_dom <= current.day <= max_dom:
                     # It is happening today!
-                    occurrences.append(
-                        parse_time_range(
-                            current.month, current.day, current.year, repeat.time_range,
-                            local_tz, now,
-                        )
+                    yield parse_time_range(
+                        current.month, current.day, current.year, repeat.time_range,
+                        local_tz, now,
                     )
 
         current += timedelta(days=1)
-
-    return occurrences

@@ -151,7 +151,7 @@ class TestTokenizing(unittest.TestCase):
 
 class TestRepeatPhrase(unittest.TestCase):
 
-    def test(self):
+    def test_1(self):
         now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 5, 19))
         phrase = '1st and 3rd Wednesdays 8:30pm'
         rv = parse_repeat_phrase(
@@ -166,5 +166,21 @@ class TestRepeatPhrase(unittest.TestCase):
                 (occurrence_2, None),
                 (occurrence_3, None),
             ],
-            rv
+            list(rv)
+        )
+
+    def test_2(self):
+        now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 1, 19))
+        phrase = '1st Fridays 8:30pm-12:30am'
+        rv = parse_repeat_phrase(
+            phrase, timedelta(days=40), local_tz=PYTZ_TIME_ZONE, now=now
+        )
+        occurrence_1 = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 2, 20, 30))
+        occurrence_2 = PYTZ_TIME_ZONE.localize(datetime(2018, 4, 6, 20, 30))
+        self.assertEqual(
+            [
+                (occurrence_1, occurrence_1 + timedelta(hours=4)),
+                (occurrence_2, occurrence_2 + timedelta(hours=4)),
+            ],
+            list(rv)
         )
