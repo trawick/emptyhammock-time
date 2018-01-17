@@ -1,5 +1,9 @@
 # Changes and migration requirements
 
+## Version 0.0.7
+
+* 'a' and 'p' are treated like 'am' and 'pm' in phrases like `7p-11p`
+
 ## Version 0.0.6
 
 * `parse_repeat_phrase()` now supports phrases like `1st Fridays 8:30pm-12:30am`.

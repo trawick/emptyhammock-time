@@ -110,10 +110,12 @@ class TestTimeRange(unittest.TestCase):
             ('7pm-8:30', t_7pm, t_830pm),
             ('8:00 pm - 11:00 pm', t_8pm, t_11pm),
             ('7pm-11pm', t_7pm, t_11pm),
+            ('7p-11p', t_7pm, t_11pm),
             ('8pm – 11pm', t_8pm, t_11pm),
             ('8:30 – 9:30 PM', t_830pm, t_930pm),
             ('8pm-12am', t_8pm, t_12am),
             ('9 PM – 12 AM', t_9pm, t_12am),
+            ('9p-12a', t_9pm, t_12am),
         )
         for time_range, expected_starts_at, expected_ends_at in test_cases:
             actual_starts_at, actual_ends_at = \
@@ -138,6 +140,7 @@ class TestTokenizing(unittest.TestCase):
             ('Mondays 8:30pm', (Days, Number, AmPm)),
             ('january 13 9-11pm', (Month, Number, Number, Dash, Number, AmPm)),
             ('9pm', (Number, AmPm)),
+            ('9p', (Number, AmPm)),
             ('9 PM - 12 AM', (Number, AmPm, Dash, Number, AmPm)),
             ('7pm-8:30', (Number, AmPm, Dash, Number)),
         )
