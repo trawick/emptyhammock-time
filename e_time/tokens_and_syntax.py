@@ -64,7 +64,7 @@ class Days(String):
 
 
 class AmPm(String):
-    values = ['am', 'pm']
+    values = ['am', 'pm', 'a', 'p']
 
     @classmethod
     def prep_val(cls, val):
@@ -72,7 +72,7 @@ class AmPm(String):
 
     @classmethod
     def is_pm(cls, val):
-        return val.lower() == 'pm'
+        return val.lower() in ('p', 'pm')
 
 
 String.subclasses.append(Days)

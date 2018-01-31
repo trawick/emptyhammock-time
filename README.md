@@ -2,6 +2,31 @@
 
 ## Time-related utilities for Python 3
 
+The included functions parse text that describes a time, time range, or
+repeated occurrences of a time.
+
+Examples of text that can be parsed with the appropriate function:
+
+* `1st and 3rd Mondays 7pm-9pm`
+* `january 13 3:45pm`
+* `9pm-12am`
+
+### `parse_repeat_phrase()`
+
+This function parses a text string describing occurrences of an event that
+repeats on some or all of a specific day of the week, such as 2nd Fridays
+or 1st and 3rd Mondays.
+
+Example input:
+
+* `parse_repeat_phrase('1st Fridays 8:30pm-12:30am', timedelta(days=40))`
+
+It starts with the first occurrence after the current time (or after the time
+specified by the optional `now` parameter); it will generate all occurrences
+from that time over the range expressed by the 2nd argument.
+
+Normally the optional `local_tz` argument should be set to a `pytz` timezone.
+
 ### `parse_single_event()`
 
 This function parses a text string describing a single time range on a

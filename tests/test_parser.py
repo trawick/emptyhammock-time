@@ -110,10 +110,12 @@ class TestTimeRange(unittest.TestCase):
             ('7pm-8:30', t_7pm, t_830pm),
             ('8:00 pm - 11:00 pm', t_8pm, t_11pm),
             ('7pm-11pm', t_7pm, t_11pm),
+            ('7p-11p', t_7pm, t_11pm),
             ('8pm – 11pm', t_8pm, t_11pm),
             ('8:30 – 9:30 PM', t_830pm, t_930pm),
             ('8pm-12am', t_8pm, t_12am),
             ('9 PM – 12 AM', t_9pm, t_12am),
+            ('9p-12a', t_9pm, t_12am),
         )
         for time_range, expected_starts_at, expected_ends_at in test_cases:
             actual_starts_at, actual_ends_at = \
@@ -138,6 +140,7 @@ class TestTokenizing(unittest.TestCase):
             ('Mondays 8:30pm', (Days, Number, AmPm)),
             ('january 13 9-11pm', (Month, Number, Number, Dash, Number, AmPm)),
             ('9pm', (Number, AmPm)),
+            ('9p', (Number, AmPm)),
             ('9 PM - 12 AM', (Number, AmPm, Dash, Number, AmPm)),
             ('7pm-8:30', (Number, AmPm, Dash, Number)),
         )
@@ -151,7 +154,7 @@ class TestTokenizing(unittest.TestCase):
 
 class TestRepeatPhrase(unittest.TestCase):
 
-    def test(self):
+    def test_1(self):
         now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 5, 19))
         phrase = '1st and 3rd Wednesdays 8:30pm'
         rv = parse_repeat_phrase(
@@ -166,5 +169,21 @@ class TestRepeatPhrase(unittest.TestCase):
                 (occurrence_2, None),
                 (occurrence_3, None),
             ],
-            rv
+            list(rv)
+        )
+
+    def test_2(self):
+        now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 1, 19))
+        phrase = '1st Fridays 8:30pm-12:30am'
+        rv = parse_repeat_phrase(
+            phrase, timedelta(days=40), local_tz=PYTZ_TIME_ZONE, now=now
+        )
+        occurrence_1 = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 2, 20, 30))
+        occurrence_2 = PYTZ_TIME_ZONE.localize(datetime(2018, 4, 6, 20, 30))
+        self.assertEqual(
+            [
+                (occurrence_1, occurrence_1 + timedelta(hours=4)),
+                (occurrence_2, occurrence_2 + timedelta(hours=4)),
+            ],
+            list(rv)
         )
