@@ -1,5 +1,9 @@
 # Changes and migration requirements
 
+## Version 0.0.8
+
+* `parse_single_event()` can handle year in the string
+
 ## Version 0.0.7
 
 * 'a' and 'p' are treated like 'am' and 'pm' in phrases like `7p-11p`

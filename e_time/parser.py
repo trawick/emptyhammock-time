@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from .tokens_and_syntax import (
-    Days, Month, Number, Dash, AmPm, String, Whitespace,
+    Comma, Days, Month, Number, Dash, AmPm, String, Whitespace,
     evaluate_by_syntax, parse
 )
 
@@ -34,7 +34,12 @@ def convert_date(parsed_date, local_tz=None, now=None):
     month = Month.get_month_number(month[1])
     day = int(day[1])
 
-    return month, day, _guess_year(month, day, local_tz, now)
+    if len(parsed_date) > 2:
+        year = int(parsed_date[-1][1])
+    else:
+        year = _guess_year(month, day, local_tz, now)
+
+    return month, day, year
 
 
 def convert_time(s):
@@ -42,27 +47,6 @@ def convert_time(s):
     if len(values) == 1:
         return values[0], 0
     return values[0], values[1]
-
-
-# XXX refactor this to combine logic with parse_time_range()
-def convert_times(parsed_time):
-    syntax = [t for t, _ in parsed_time]
-
-    if syntax == [Number, Dash, Number, AmPm]:  # e.g. '7-9pm'
-        start_hour, start_minute = convert_time(parsed_time[0][1])
-        stop_hour, stop_minute = convert_time(parsed_time[2][1])
-        if AmPm.is_pm(parsed_time[3][1]):
-            start_hour += 12
-            stop_hour += 12
-        return start_hour, start_minute, stop_hour, stop_minute
-
-    if syntax == [Number, AmPm]:  # e.g. '9pm'
-        start_hour, start_minute = convert_time(parsed_time[0][1])
-        if AmPm.is_pm(parsed_time[1][1]):
-            start_hour += 12
-        return start_hour, start_minute, None, None
-
-    raise ValueError('Unhandled time/range')
 
 
 def combine_date_times(month, day, year, start_hour, start_minute, stop_hour, stop_minute):
@@ -77,14 +61,30 @@ def combine_date_times(month, day, year, start_hour, start_minute, stop_hour, st
 def parse_single_event(when, local_tz=None, now=None):
     parsed = parse(when)
 
-    if [parsed[0][0], parsed[1][0]] != [Month, Number]:
-        raise ValueError('Expected date/time string "%s" to start with month and day' % when)
+    syntax = [t for t, _ in parsed]
 
-    parsed_date = parsed[:2]
-    parsed_time = parsed[2:]
+    if syntax in (
+            [Month, Number, Number, Dash, Number, AmPm],
+            [Month, Number, Number, AmPm]):
+        parsed_date = parsed[:2]
+        parsed_time = parsed[2:]
+    elif syntax in (
+            [Month, Number, Comma, Number, Number, Dash, Number, AmPm],
+            [Month, Number, Comma, Number, Number, AmPm, Dash, Number, AmPm],
+            [Month, Number, Comma, Number, Number, AmPm]):
+        parsed_date = parsed[:4]
+        parsed_time = parsed[4:]
+    elif syntax in (
+            [Month, Number, Number, Number, Dash, Number, AmPm],
+            [Month, Number, Number, Number, AmPm, Dash, Number, AmPm],
+            [Month, Number, Number, Number, AmPm]):
+        parsed_date = parsed[:3]
+        parsed_time = parsed[3:]
+    else:
+        raise ValueError('Date/time string "%s" has unexpected syntax' % when)
 
     month, day, year = convert_date(parsed_date, local_tz=local_tz, now=now)
-    times = convert_times(parsed_time)
+    times = get_start_stop_hour_minute(parsed_time, when)
     starts_at, ends_at = combine_date_times(month, day, year, *times)
     if local_tz is not None:
         starts_at = local_tz.localize(starts_at)
@@ -145,11 +145,8 @@ def both_times_stop_indicator(tokens):
     return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
 
 
-def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
-    if year is None:
-        year = _guess_year(month, day, local_tz, now)
-    parsed = parse(time_range)
-    start_hour, start_minute, stop_hour, stop_minute = evaluate_by_syntax(
+def get_start_stop_hour_minute(parsed, time_range):
+    return evaluate_by_syntax(
         time_range,
         parsed, (
             ([Number, AmPm], start_time_only),
@@ -158,6 +155,13 @@ def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
             ([Number, Dash, Number, AmPm], both_times_stop_indicator),
         )
     )
+
+
+def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
+    if year is None:
+        year = _guess_year(month, day, local_tz, now)
+    parsed = parse(time_range)
+    start_hour, start_minute, stop_hour, stop_minute = get_start_stop_hour_minute(parsed, time_range)
     try:
         start_time = datetime(year, month, day, start_hour, start_minute)
     except ValueError as e:

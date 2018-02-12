@@ -7,7 +7,7 @@ from e_time.parser import (
     parse, parse_repeat_phrase, parse_single_event, parse_time_range,
 )
 from e_time.tokens_and_syntax import (
-    AmPm, Dash, Day, Days, Month, Number, String,
+    AmPm, Comma, Dash, Day, Days, Month, Number, String,
 )
 
 TIME_ZONE = 'US/Eastern'
@@ -87,6 +87,43 @@ class TestSingleEvent(unittest.TestCase):
             ends_at
         )
 
+    def test_range_with_year(self):
+        month = 1
+        day = 1
+        year = 2018
+        # note that one has '9pm' instead of just '9'!
+        for s in ('december 31, 2016 9pm-11:30pm', 'december 31 2016 9-11:30pm'):
+            starts_at, ends_at = parse_single_event(
+                s,
+                now=datetime(year, month, day, 13, 30)
+            )
+            self.assertEqual(
+                datetime(2016, 12, 31, 21, 0),
+                starts_at
+            )
+            self.assertEqual(
+                datetime(2016, 12, 31, 23, 30),
+                ends_at
+            )
+
+    def test_start_time_with_year(self):
+        month = 1
+        day = 1
+        year = 2018
+        for s in ('december 31, 2016 9pm', 'december 31 2016 9pm'):
+            starts_at, ends_at = parse_single_event(
+                s,
+                now=datetime(year, month, day, 13, 30)
+            )
+            self.assertEqual(
+                datetime(2016, 12, 31, 21, 0),
+                starts_at
+            )
+            self.assertEqual(
+                None,
+                ends_at
+            )
+
 
 class TestTimeRange(unittest.TestCase):
 
@@ -139,6 +176,7 @@ class TestTokenizing(unittest.TestCase):
             ('Every Monday 7-9pm', (String, Day, Number, Dash, Number, AmPm)),
             ('Mondays 8:30pm', (Days, Number, AmPm)),
             ('january 13 9-11pm', (Month, Number, Number, Dash, Number, AmPm)),
+            ('january 13, 2018 9-11pm', (Month, Number, Comma, Number, Number, Dash, Number, AmPm)),
             ('9pm', (Number, AmPm)),
             ('9p', (Number, AmPm)),
             ('9 PM - 12 AM', (Number, AmPm, Dash, Number, AmPm)),

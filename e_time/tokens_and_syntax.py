@@ -10,6 +10,11 @@ class BaseToken(object):
         return val
 
 
+class Comma(BaseToken):
+    subclasses = []
+    pat = r'^,$'
+
+
 class Whitespace(BaseToken):
     subclasses = []
     pat = r'^[ \t\u00A0]+$'
@@ -91,7 +96,7 @@ class Dash(BaseToken):
     pat = r'^[-–—]+$'
 
 
-types = [Whitespace, String, Number, Dash]
+types = [Comma, Whitespace, String, Number, Dash]
 
 
 def _find_type(val):
