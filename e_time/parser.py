@@ -63,25 +63,29 @@ def parse_single_event(when, local_tz=None, now=None):
 
     syntax = [t for t, _ in parsed]
 
-    if syntax in (
-            [Month, Number, Number, Dash, Number, AmPm],
-            [Month, Number, Number, AmPm]):
-        parsed_date = parsed[:2]
-        parsed_time = parsed[2:]
-    elif syntax in (
-            [Month, Number, Comma, Number, Number, Dash, Number, AmPm],
-            [Month, Number, Comma, Number, Number, AmPm, Dash, Number, AmPm],
-            [Month, Number, Comma, Number, Number, AmPm]):
-        parsed_date = parsed[:4]
-        parsed_time = parsed[4:]
-    elif syntax in (
-            [Month, Number, Number, Number, Dash, Number, AmPm],
-            [Month, Number, Number, Number, AmPm, Dash, Number, AmPm],
-            [Month, Number, Number, Number, AmPm]):
-        parsed_date = parsed[:3]
-        parsed_time = parsed[3:]
+    # Parsed fields better be some number of date fields followed by time
+    # time fields (and nothing else); check for allowed syntaxes, and find
+    # the split between date and time fields.
+    num_date_field_table = (
+        ([Month, Number, Number, Dash, Number, AmPm], 2),
+        ([Month, Number, Number, AmPm], 2),
+        ([Month, Number, Number, Number, Dash, Number, AmPm], 3),
+        ([Month, Number, Number, Number, AmPm, Dash, Number, AmPm], 3),
+        ([Month, Number, Number, Number, AmPm], 3),
+        ([Month, Number, Comma, Number, Number, Dash, Number, AmPm], 4),
+        ([Month, Number, Comma, Number, Number, AmPm, Dash, Number, AmPm], 4),
+        ([Month, Number, Comma, Number, Number, AmPm], 4),
+    )
+
+    for if_syntax, then_num_date_fields in num_date_field_table:
+        if syntax == if_syntax:
+            num_date_fields = then_num_date_fields
+            break
     else:
         raise ValueError('Date/time string "%s" has unexpected syntax' % when)
+
+    parsed_date = parsed[:num_date_fields]
+    parsed_time = parsed[num_date_fields:]
 
     month, day, year = convert_date(parsed_date, local_tz=local_tz, now=now)
     times = get_start_stop_hour_minute(parsed_time, when)
