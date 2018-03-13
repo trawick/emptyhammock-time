@@ -27,7 +27,7 @@ def _guess_year(month, day, local_tz, now):
         return now.year
 
 
-def convert_date(parsed_date, local_tz=None, now=None):
+def _convert_date(parsed_date, local_tz=None, now=None):
     month = parsed_date[0]
     day = parsed_date[1]
 
@@ -42,14 +42,14 @@ def convert_date(parsed_date, local_tz=None, now=None):
     return month, day, year
 
 
-def convert_time(s):
+def _convert_time(s):
     values = list(map(int, s.split(':')))
     if len(values) == 1:
         return values[0], 0
     return values[0], values[1]
 
 
-def combine_date_times(month, day, year, start_hour, start_minute, stop_hour, stop_minute):
+def _combine_date_times(month, day, year, start_hour, start_minute, stop_hour, stop_minute):
     starts_at_naive = datetime(year, month, day, start_hour, start_minute)
     if stop_hour is not None:
         stops_at_naive = datetime(year, month, day, stop_hour, stop_minute)
@@ -87,9 +87,9 @@ def parse_single_event(when, local_tz=None, now=None):
     parsed_date = parsed[:num_date_fields]
     parsed_time = parsed[num_date_fields:]
 
-    month, day, year = convert_date(parsed_date, local_tz=local_tz, now=now)
-    times = get_start_stop_hour_minute(parsed_time, when)
-    starts_at, ends_at = combine_date_times(month, day, year, *times)
+    month, day, year = _convert_date(parsed_date, local_tz=local_tz, now=now)
+    times = _get_start_stop_hour_minute(parsed_time, when)
+    starts_at, ends_at = _combine_date_times(month, day, year, *times)
     if local_tz is not None:
         starts_at = local_tz.localize(starts_at)
         if ends_at is not None:
@@ -97,15 +97,15 @@ def parse_single_event(when, local_tz=None, now=None):
     return starts_at, ends_at
 
 
-def time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value):
-    start_hour, start_minute = convert_time(start_time_value)
+def _get_time_range(start_time_value, start_indicator_value, stop_time_value=None, stop_indicator_value=None):
+    start_hour, start_minute = _convert_time(start_time_value)
     if AmPm.is_pm(start_indicator_value):
         start_hour += 12
     elif start_hour == 12:  # 12am
         start_hour = 0
     if stop_time_value is None:
         return start_hour, start_minute, None, None
-    stop_hour, stop_minute = convert_time(stop_time_value)
+    stop_hour, stop_minute = _convert_time(stop_time_value)
     if AmPm.is_pm(stop_indicator_value):
         stop_hour += 12
     elif stop_hour == 12:  # 12am
@@ -113,50 +113,48 @@ def time_range_guts(start_time_value, start_indicator_value, stop_time_value, st
     return start_hour, start_minute, stop_hour, stop_minute
 
 
-def start_time_only(tokens):
+def _start_time_only(tokens):
     values = [token[1] for token in tokens]
     start_time_value = values[0]
     start_indicator_value = values[1]
-    stop_time_value = None
-    stop_indicator_value = None
-    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+    return _get_time_range(start_time_value, start_indicator_value)
 
 
-def both_times_both_indicators(tokens):
+def _both_times_both_indicators(tokens):
     values = [token[1] for token in tokens]
     start_time_value = values[0]
     start_indicator_value = values[1]
     stop_time_value = values[3]
     stop_indicator_value = values[4]
-    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+    return _get_time_range(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
 
 
-def both_times_start_indicator(tokens):
+def _both_times_start_indicator(tokens):
     values = [token[1] for token in tokens]
     start_time_value = values[0]
     start_indicator_value = values[1]
     stop_time_value = values[3]
     stop_indicator_value = values[1]
-    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+    return _get_time_range(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
 
 
-def both_times_stop_indicator(tokens):
+def _both_times_stop_indicator(tokens):
     values = [token[1] for token in tokens]
     start_time_value = values[0]
     start_indicator_value = values[3]
     stop_time_value = values[2]
     stop_indicator_value = values[3]
-    return time_range_guts(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+    return _get_time_range(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
 
 
-def get_start_stop_hour_minute(parsed, time_range):
+def _get_start_stop_hour_minute(parsed, time_range):
     return evaluate_by_syntax(
         time_range,
         parsed, (
-            ([Number, AmPm], start_time_only),
-            ([Number, AmPm, Dash, Number, AmPm], both_times_both_indicators),
-            ([Number, AmPm, Dash, Number], both_times_start_indicator),
-            ([Number, Dash, Number, AmPm], both_times_stop_indicator),
+            ([Number, AmPm], _start_time_only),
+            ([Number, AmPm, Dash, Number, AmPm], _both_times_both_indicators),
+            ([Number, AmPm, Dash, Number], _both_times_start_indicator),
+            ([Number, Dash, Number, AmPm], _both_times_stop_indicator),
         )
     )
 
@@ -165,7 +163,8 @@ def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
     if year is None:
         year = _guess_year(month, day, local_tz, now)
     parsed = parse(time_range)
-    start_hour, start_minute, stop_hour, stop_minute = get_start_stop_hour_minute(parsed, time_range)
+    start_hour, start_minute, stop_hour, stop_minute = \
+        _get_start_stop_hour_minute(parsed, time_range)
     try:
         start_time = datetime(year, month, day, start_hour, start_minute)
     except ValueError as e:

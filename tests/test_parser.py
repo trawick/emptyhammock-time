@@ -196,7 +196,7 @@ class TestTokenizing(unittest.TestCase):
 
 class TestRepeatPhrase(unittest.TestCase):
 
-    def test_1(self):
+    def test_with_just_start_time(self):
         now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 5, 19))
         phrase = '1st and 3rd Wednesdays 8:30pm'
         rv = parse_repeat_phrase(
@@ -214,7 +214,7 @@ class TestRepeatPhrase(unittest.TestCase):
             list(rv)
         )
 
-    def test_2(self):
+    def test_with_time_range(self):
         now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 1, 19))
         phrase = '1st Fridays 8:30pm-12:30am'
         rv = parse_repeat_phrase(
