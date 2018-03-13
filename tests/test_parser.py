@@ -124,6 +124,10 @@ class TestSingleEvent(unittest.TestCase):
                 ends_at
             )
 
+    def test_bad_string(self):
+        with self.assertRaises(ValueError):
+            parse_single_event('1 december 31 2017 9-11:30pm')
+
 
 class TestTimeRange(unittest.TestCase):
 
