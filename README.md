@@ -69,6 +69,11 @@ us_eastern = pytz.timezone('US/Eastern')
 starts_at, ends_at = parse_time_range(1, 15, 2018, '9pm-12am', local_tz=us_eastern)
 ```
 
+## Dependencies
+
+* Python 3.5 or higher
+* Optional: `pytz`, for constructing time zones to pass to the library
+
 ## Support
 
 Please open Github issues for suggestions or suspected problems.  Even if I am
