@@ -44,10 +44,10 @@ Naive `datetime`s will be returned unless a `pytz` timezone is specified with
 the optional parameter `local_tz`:
 
 ```python
-    import pytz
-    from e_time import parse_single_event
-    us_eastern = pytz.timezone('US/Eastern')
-    starts_at, _ = parse_single_event('january 13 9:45pm', local_tz=us_eastern)
+import pytz
+from e_time import parse_single_event
+us_eastern = pytz.timezone('US/Eastern')
+starts_at, _ = parse_single_event('january 13 9:45pm', local_tz=us_eastern)
 ```
 
 ### `parse_time_range()`
@@ -59,10 +59,10 @@ in arguments to the function.
 Example use with the optional time zone argument:
 
 ```python
-    import pytz
-    from e_time import parse_time_range
-    us_eastern = pytz.timezone('US/Eastern')
-    starts_at, ends_at = parse_time_range(1, 15, 2018, '9pm-12am', local_tz=us_eastern)
+import pytz
+from e_time import parse_time_range
+us_eastern = pytz.timezone('US/Eastern')
+starts_at, ends_at = parse_time_range(1, 15, 2018, '9pm-12am', local_tz=us_eastern)
 ```
 
 ## Support
