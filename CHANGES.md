@@ -1,5 +1,10 @@
 # Changes and migration requirements
 
+## Version 0.0.9 (not yet released)
+
+* `parse_repeat_phrase()`, `parse_single_event()` and `parse_time_range()`
+  can (and should) be imported directly from `e_time`.
+
 ## Version 0.0.8
 
 * `parse_single_event()` can handle year in the string

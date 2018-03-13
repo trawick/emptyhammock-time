@@ -3,11 +3,11 @@ import unittest
 
 import pytz
 
-from e_time.parser import (
-    parse, parse_repeat_phrase, parse_single_event, parse_time_range,
+from e_time import (
+    parse_repeat_phrase, parse_single_event, parse_time_range,
 )
 from e_time.tokens_and_syntax import (
-    AmPm, Comma, Dash, Day, Days, Month, Number, String,
+    parse, AmPm, Comma, Dash, Day, Days, Month, Number, String,
 )
 
 TIME_ZONE = 'US/Eastern'
@@ -91,7 +91,7 @@ class TestSingleEvent(unittest.TestCase):
         month = 1
         day = 1
         year = 2018
-        # note that one has '9pm' instead of just '9'!
+        # note that one has '9pm' instead of just '9', and one has comma before year
         for s in ('december 31, 2016 9pm-11:30pm', 'december 31 2016 9-11:30pm'):
             starts_at, ends_at = parse_single_event(
                 s,
