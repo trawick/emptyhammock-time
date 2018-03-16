@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 import unittest
 
 import pytz
@@ -160,7 +160,7 @@ class TestTimeRange(unittest.TestCase):
         )
         for time_range, expected_starts_at, expected_ends_at in test_cases:
             actual_starts_at, actual_ends_at = \
-                parse_time_range(month, day, year, time_range, PYTZ_TIME_ZONE)
+                parse_time_range(date(year, month, day), time_range, PYTZ_TIME_ZONE)
             self.assertEqual(
                 expected_starts_at, actual_starts_at,
                 'Determining starts_at failed for %s' % time_range

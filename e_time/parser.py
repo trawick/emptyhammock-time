@@ -1,4 +1,4 @@
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 
 from .tokens_and_syntax import (
     Comma, Days, Month, Number, Dash, AmPm, String, Whitespace,
@@ -19,12 +19,28 @@ def _guess_year(month, day, local_tz, now):
     # we couldn't guess the year anyway.
     then = datetime(now.year, month, day)
     then = local_tz.localize(then) if local_tz else then
-    if now - then > timedelta(days=9*30):
+    delta = timedelta(days=9*30)
+    if now - then > delta:
         return now.year + 1
-    elif then - now > timedelta(days=9*30):
+    elif then - now > delta:
         return now.year - 1
     else:
         return now.year
+
+
+def guess_date(month, day, local_tz=None, now=None):
+    """
+    guess_date() builds a date from the provided month and day by guessing the
+    year.
+
+    :param month:
+    :param day:
+    :param local_tz:
+    :param now:
+    :return: datetime.date with the provided month and day and the guessed year.
+    """
+    year = _guess_year(month, day, local_tz, now)
+    return date(year, month, day)
 
 
 def _convert_date(parsed_date, local_tz=None, now=None):
@@ -159,9 +175,8 @@ def _get_start_stop_hour_minute(parsed, time_range):
     )
 
 
-def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
-    if year is None:
-        year = _guess_year(month, day, local_tz, now)
+def parse_time_range(on_date, time_range, local_tz=None, now=None):
+    year, month, day = on_date.year, on_date.month, on_date.day
     parsed = parse(time_range)
     start_hour, start_minute, stop_hour, stop_minute = \
         _get_start_stop_hour_minute(parsed, time_range)
@@ -257,7 +272,7 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
                 if min_dom <= current.day <= max_dom:
                     # It is happening today!
                     yield parse_time_range(
-                        current.month, current.day, current.year, repeat.time_range,
+                        date(current.year, current.month, current.day), repeat.time_range,
                         local_tz, now,
                     )
 
