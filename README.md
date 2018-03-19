@@ -63,10 +63,12 @@ in arguments to the function.
 Example:
 
 ```python
+from datetime import date
 import pytz
 from e_time import parse_time_range
 us_eastern = pytz.timezone('US/Eastern')
-starts_at, ends_at = parse_time_range(1, 15, 2018, '9pm-12am', local_tz=us_eastern)
+
+starts_at, ends_at = parse_time_range(date(2018, 1, 15), '9pm-12am', local_tz=us_eastern)
 ```
 
 ## Dependencies
