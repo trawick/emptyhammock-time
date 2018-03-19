@@ -9,7 +9,7 @@
 
 * `parse_repeat_phrase()`, `parse_single_event()` and `parse_time_range()`
   can (and should) be imported directly from `e_time`.
-* `parse_single_event()`'s signature has changed.  It now takes a `datetime.date`
+* `parse_time_range()`'s signature has changed.  It now takes a `datetime.date`
   instead of year/month/day.  For callers that previously passed `None` for year,
   use `guess_date()` to obtain an appropriate date parameter.
 
