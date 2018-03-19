@@ -1,7 +1,7 @@
 from datetime import datetime, timedelta
 
 from .tokens_and_syntax import (
-    Comma, Days, Month, Number, Dash, AmPm, String, Whitespace,
+    Comma, Day, Days, Month, Number, Dash, AmPm, String, Whitespace,
     evaluate_by_syntax, parse
 )
 
@@ -186,19 +186,65 @@ def parse_time_range(month, day, year, time_range, local_tz=None, now=None):
     return start_time, stop_time
 
 
-class RepeatedDay(object):
+class _DaysRepeatPerWeekOfMonth(object):
+    """
+    Generate repeated days, where the basis of the repetition is a certain week
+    of the month (e.g., first and third Fridays).
+    """
 
     def __init__(self, day_of_week, occurrences_of_day, time_range):
         self.day_of_week = day_of_week[0].get_day_of_week(day_of_week[1])  # can be Day or Days
         self.occurrences_of_day = [int(x) for _, x in occurrences_of_day]
         self.time_range = time_range
 
+    def get_occurrences(self, how_long, local_tz, now):
+        current = _get_now(local_tz, now)
+        last = current + how_long
+        while current < last:
+            if current.weekday() == self.day_of_week:
+                # Okay, it is the correct day of the week, but it might not be the right occurrence.
+                for occurrence in self.occurrences_of_day:
+                    max_dom = 7 * occurrence  # 3rd Monday can't be later than 21st
+                    min_dom = max_dom - 6  # or earlier than 15th
+                    if min_dom <= current.day <= max_dom:
+                        # It is happening today!
+                        yield current.month, current.day, current.year
+
+            current += timedelta(days=1)
+
+
+class _DaysRepeatPerWeek(object):
+    """
+    Generate repeated days, where the basis of the repetition is relative
+    to weeks since the prior repetition (e.g., every other Monday).
+    """
+
+    def __init__(self, day_of_week, days_between, time_range):
+        self.day_of_week = day_of_week[0].get_day_of_week(day_of_week[1])  # can be Day or Days
+        self.days_between = days_between
+        self.time_range = time_range
+
+    def get_occurrences(self, how_long, local_tz, now):
+        current = _get_now(local_tz, now)
+        last = current + how_long
+
+        while current < last:
+            if current.weekday() == self.day_of_week:
+                break
+            current += timedelta(days=1)
+        else:
+            return  # no occurrences
+
+        while current < last:
+            yield current.month, current.day, current.year
+            current += timedelta(days=self.days_between)
+
 
 def _repeat_phrase_1(tokens):
     values = [token[1] for token in tokens]
     assert len(values[1]) == len(values[6]) == 2  # 'st', 'nd', 'rd', etc.
     assert values[3] == 'and'
-    repeat = RepeatedDay(
+    repeat = _DaysRepeatPerWeekOfMonth(
         tokens[8],
         [tokens[0], tokens[5]],
         values[10] + values[11],
@@ -209,10 +255,22 @@ def _repeat_phrase_1(tokens):
 def _repeat_phrase_2(tokens):
     values = [token[1] for token in tokens]
     assert len(values[1]) == 2  # 'st', 'nd', 'rd', etc.
-    repeat = RepeatedDay(
+    repeat = _DaysRepeatPerWeekOfMonth(
         tokens[3],
         [tokens[0]],
         values[5] + values[6] + values[7] + values[8] + values[9],
+    )
+    return repeat
+
+
+def _repeat_phrase_3(tokens):
+    values = [token[1] for token in tokens]
+    assert values[0].lower() == 'every'
+    assert values[2].lower() == 'other'
+    repeat = _DaysRepeatPerWeek(
+        tokens[4],
+        14,  # "every other" === "every 14 days",
+        values[6] + values[7] + values[8] + values[9]
     )
     return repeat
 
@@ -243,22 +301,16 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
                  Number, String, Whitespace, Days, Whitespace,
                  Number, AmPm, Dash, Number, AmPm,
              ], _repeat_phrase_2,),
+            # 'Every other Thursday 8-11pm'
+            ([
+                String, Whitespace, String, Whitespace, Day, Whitespace,
+                Number, Dash, Number, AmPm
+             ], _repeat_phrase_3,),
         ),
     )
 
-    current = _get_now(local_tz, now)
-    last = current + how_long
-    while current < last:
-        if current.weekday() == repeat.day_of_week:
-            # Okay, it is the correct day of the week, but it might not be the right occurrence.
-            for occurrence in repeat.occurrences_of_day:
-                max_dom = 7 * occurrence  # 3rd Monday can't be later than 21st
-                min_dom = max_dom - 6  # or earlier than 15th
-                if min_dom <= current.day <= max_dom:
-                    # It is happening today!
-                    yield parse_time_range(
-                        current.month, current.day, current.year, repeat.time_range,
-                        local_tz, now,
-                    )
+    for month, day, year in repeat.get_occurrences(how_long, local_tz, now):
+        yield parse_time_range(
+            month, day, year, repeat.time_range, local_tz, now,
+        )
 
-        current += timedelta(days=1)

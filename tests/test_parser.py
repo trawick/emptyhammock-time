@@ -214,7 +214,7 @@ class TestRepeatPhrase(unittest.TestCase):
             list(rv)
         )
 
-    def test_with_time_range(self):
+    def test_with_time_range_1(self):
         now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 1, 19))
         phrase = '1st Fridays 8:30pm-12:30am'
         rv = parse_repeat_phrase(
@@ -226,6 +226,28 @@ class TestRepeatPhrase(unittest.TestCase):
             [
                 (occurrence_1, occurrence_1 + timedelta(hours=4)),
                 (occurrence_2, occurrence_2 + timedelta(hours=4)),
+            ],
+            list(rv)
+        )
+
+    def test_with_time_range_2(self):
+        now = PYTZ_TIME_ZONE.localize(datetime(2018, 2, 22, 12))
+        phrase = 'Every other Thursday 8-11pm'
+        rv = parse_repeat_phrase(
+            phrase, timedelta(days=57), local_tz=PYTZ_TIME_ZONE, now=now
+        )
+        occurrence_1 = PYTZ_TIME_ZONE.localize(datetime(2018, 2, 22, 20, 0))
+        occurrence_2 = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 8, 20, 0))
+        occurrence_3 = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 22, 20, 0))
+        occurrence_4 = PYTZ_TIME_ZONE.localize(datetime(2018, 4, 5, 20, 0))
+        occurrence_5 = PYTZ_TIME_ZONE.localize(datetime(2018, 4, 19, 20, 0))
+        self.assertEqual(
+            [
+                (occurrence_1, occurrence_1 + timedelta(hours=3)),
+                (occurrence_2, occurrence_2 + timedelta(hours=3)),
+                (occurrence_3, occurrence_3 + timedelta(hours=3)),
+                (occurrence_4, occurrence_4 + timedelta(hours=3)),
+                (occurrence_5, occurrence_5 + timedelta(hours=3)),
             ],
             list(rv)
         )

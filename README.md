@@ -17,8 +17,8 @@ a `pytz` timezone in most cases.  (Otherwise a naive `datetime` is returned.)
 ### `parse_repeat_phrase()`
 
 This function parses a text string describing occurrences of an event that
-repeats on some or all of a specific day of the week, such as 2nd Fridays
-or 1st and 3rd Mondays.
+repeats on some or all of a specific day of the week, such as *2nd Fridays*
+or *1st and 3rd Mondays* or *Every other Tuesday*.
 
 Example:
 
