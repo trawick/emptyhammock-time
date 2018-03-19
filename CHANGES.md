@@ -1,6 +1,6 @@
 # Changes and migration requirements
 
-## Version 0.0.9 (not yet released)
+## Version 0.0.9
 
 * `parse_repeat_phrase()` now supports phrases like `Every other Thursday 8-11pm`.
 * `guess_date()` has been added.
