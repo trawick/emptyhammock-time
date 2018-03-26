@@ -290,6 +290,16 @@ def _repeat_phrase_3(tokens):
     return repeat
 
 
+def _repeat_phrase_4(tokens):
+    values = [token[1] for token in tokens]
+    repeat = _DaysRepeatPerWeek(
+        tokens[0],
+        7,  # every === "every 7 days",
+        ''.join(values[2:]),
+    )
+    return repeat
+
+
 def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
     """
     :param phrase: "1st and 3rd Wednesdays 8:30pm", etc.
@@ -321,6 +331,11 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
                 String, Whitespace, String, Whitespace, Day, Whitespace,
                 Number, Dash, Number, AmPm
              ], _repeat_phrase_3,),
+            # 'Thursdays 8pm-12am'
+            ([
+                Days, Whitespace,
+                Number, AmPm, Dash, Number, AmPm,
+             ], _repeat_phrase_4,),
         ),
     )
 

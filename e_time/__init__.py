@@ -1,3 +1,3 @@
-__version__ = '0.0.9'
+__version__ = '0.0.10'
 
 from .parser import guess_date, parse_repeat_phrase, parse_single_event, parse_time_range

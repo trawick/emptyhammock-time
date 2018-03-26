@@ -251,3 +251,29 @@ class TestRepeatPhrase(unittest.TestCase):
             ],
             list(rv)
         )
+
+    def test_every_occurrence(self):
+        now = PYTZ_TIME_ZONE.localize(datetime(2018, 2, 22, 12))
+        phrase = 'Thursdays 8pm-12am'
+        rv = parse_repeat_phrase(
+            phrase, timedelta(days=57), local_tz=PYTZ_TIME_ZONE, now=now
+        )
+        start_times = [
+            PYTZ_TIME_ZONE.localize(datetime(2018, 2, 22, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 3, 1, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 3, 8, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 3, 15, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 3, 22, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 3, 29, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 4, 5, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 4, 12, 20, 0)),
+            PYTZ_TIME_ZONE.localize(datetime(2018, 4, 19, 20, 0))
+        ]
+        start_stop_times = [
+            (start, start + timedelta(hours=4))
+            for start in start_times
+        ]
+        self.assertEqual(
+            start_stop_times,
+            list(rv)
+        )
