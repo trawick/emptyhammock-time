@@ -137,6 +137,8 @@ class TestTimeRange(unittest.TestCase):
         day = 31
         year = now.year
 
+        t_1230pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 12, 30))
+        t_2pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 14))
         t_7pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 19))
         t_8pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 20))
         t_830pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 20, 30))
@@ -145,6 +147,8 @@ class TestTimeRange(unittest.TestCase):
         t_11pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 23))
         t_12am = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 23) + timedelta(hours=1))
         test_cases = (
+            ('12:30p-2pm', t_1230pm, t_2pm),
+            ('12:30pm-2pm', t_1230pm, t_2pm),
             ('9pm-12am', t_9pm, t_12am),
             ('9pm', t_9pm, None),
             ('7pm-8:30pm', t_7pm, t_830pm),

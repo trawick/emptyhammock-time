@@ -1,5 +1,9 @@
 # Changes and migration requirements
 
+## Version 0.0.11
+
+* 12pm/12:30pm/etc. is now supported when parsing time ranges.
+
 ## Version 0.0.10
 
 * `parse_repeat_phrase()` now supports phrases like `Fridays 8pm-11pm`.

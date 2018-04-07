@@ -116,14 +116,16 @@ def parse_single_event(when, local_tz=None, now=None):
 def _get_time_range(start_time_value, start_indicator_value, stop_time_value=None, stop_indicator_value=None):
     start_hour, start_minute = _convert_time(start_time_value)
     if AmPm.is_pm(start_indicator_value):
-        start_hour += 12
+        if start_hour != 12:
+            start_hour += 12
     elif start_hour == 12:  # 12am
         start_hour = 0
     if stop_time_value is None:
         return start_hour, start_minute, None, None
     stop_hour, stop_minute = _convert_time(stop_time_value)
     if AmPm.is_pm(stop_indicator_value):
-        stop_hour += 12
+        if stop_hour != 12:
+            stop_hour += 12
     elif stop_hour == 12:  # 12am
         stop_hour = 0
     return start_hour, start_minute, stop_hour, stop_minute
