@@ -177,7 +177,7 @@ def _get_start_stop_hour_minute(parsed, time_range):
     )
 
 
-def parse_time_range(on_date, time_range, local_tz=None, now=None):
+def parse_time_range(on_date, time_range, local_tz=None):
     year, month, day = on_date.year, on_date.month, on_date.day
     parsed = parse(time_range)
     start_hour, start_minute, stop_hour, stop_minute = \
@@ -343,5 +343,5 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
 
     for month, day, year in repeat.get_occurrences(how_long, local_tz, now):
         yield parse_time_range(
-            date(year, month, day), repeat.time_range, local_tz, now,
+            date(year, month, day), repeat.time_range, local_tz,
         )

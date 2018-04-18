@@ -1,5 +1,10 @@
 # Changes and migration requirements
 
+## Version 0.0.12 (not yet released)
+
+* The parameter `now` has been removed from `parse_time_range()`.  This was not
+  useful since the breaking changes in 0.0.9.
+
 ## Version 0.0.11
 
 * 12pm/12:30pm/etc. is now supported when parsing time ranges.
