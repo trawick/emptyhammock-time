@@ -113,21 +113,22 @@ def parse_single_event(when, local_tz=None, now=None):
     return starts_at, ends_at
 
 
+def _to_24hr(indicator, hour):
+    if AmPm.is_pm(indicator):
+        if hour != 12:
+            hour += 12
+    elif hour == 12:  # 12am
+        hour = 0
+    return hour
+
+
 def _get_time_range(start_time_value, start_indicator_value, stop_time_value=None, stop_indicator_value=None):
     start_hour, start_minute = _convert_time(start_time_value)
-    if AmPm.is_pm(start_indicator_value):
-        if start_hour != 12:
-            start_hour += 12
-    elif start_hour == 12:  # 12am
-        start_hour = 0
+    start_hour = _to_24hr(start_indicator_value, start_hour)
     if stop_time_value is None:
         return start_hour, start_minute, None, None
     stop_hour, stop_minute = _convert_time(stop_time_value)
-    if AmPm.is_pm(stop_indicator_value):
-        if stop_hour != 12:
-            stop_hour += 12
-    elif stop_hour == 12:  # 12am
-        stop_hour = 0
+    stop_hour = _to_24hr(stop_indicator_value, stop_hour)
     return start_hour, start_minute, stop_hour, stop_minute
 
 
