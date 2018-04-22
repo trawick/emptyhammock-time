@@ -20,7 +20,7 @@ setup(
     include_package_data=True,
     license='Apache 2.0 License',
     version=VERSION,
-    description='A Python library providing time-relatged utility',
+    description='A Python library providing time-related parsing',
     author='Emptyhammock Software and Services LLC',
     author_email='info@emptyhammock.com',
     url='https://github.com/trawick/emptyhammock-time',
