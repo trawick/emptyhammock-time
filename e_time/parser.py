@@ -113,7 +113,9 @@ def parse_single_event(when, local_tz=None, now=None):
     return starts_at, ends_at
 
 
-def _get_time_range(start_time_value, start_indicator_value, stop_time_value=None, stop_indicator_value=None):
+def _get_time_range(
+        start_time_value, start_indicator_value, stop_time_value=None, stop_indicator_value=None
+):
     start_hour, start_minute = _convert_time(start_time_value)
     if AmPm.is_pm(start_indicator_value):
         if start_hour != 12:
@@ -144,7 +146,9 @@ def _both_times_both_indicators(tokens):
     start_indicator_value = values[1]
     stop_time_value = values[3]
     stop_indicator_value = values[4]
-    return _get_time_range(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+    return _get_time_range(
+        start_time_value, start_indicator_value, stop_time_value, stop_indicator_value
+    )
 
 
 def _both_times_start_indicator(tokens):
@@ -153,7 +157,9 @@ def _both_times_start_indicator(tokens):
     start_indicator_value = values[1]
     stop_time_value = values[3]
     stop_indicator_value = values[1]
-    return _get_time_range(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+    return _get_time_range(
+        start_time_value, start_indicator_value, stop_time_value, stop_indicator_value
+    )
 
 
 def _both_times_stop_indicator(tokens):
@@ -162,7 +168,9 @@ def _both_times_stop_indicator(tokens):
     start_indicator_value = values[3]
     stop_time_value = values[2]
     stop_indicator_value = values[3]
-    return _get_time_range(start_time_value, start_indicator_value, stop_time_value, stop_indicator_value)
+    return _get_time_range(
+        start_time_value, start_indicator_value, stop_time_value, stop_indicator_value
+    )
 
 
 def _get_start_stop_hour_minute(parsed, time_range):
