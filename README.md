@@ -1,5 +1,7 @@
 # emptyhammock-time
 
+[![Build Status](https://travis-ci.org/trawick/emptyhammock-time.svg?branch=master)](https://travis-ci.org/trawick/emptyhammock-time)
+
 ## Time-related utilities for Python 3
 
 The included functions parse text that describes a time, time range, or
