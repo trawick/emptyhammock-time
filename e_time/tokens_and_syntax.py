@@ -22,7 +22,7 @@ class Whitespace(BaseToken):
 
 class String(BaseToken):
     subclasses = []
-    pat = r'^[A-Za-z]+$'
+    pat = r'^[A-Za-z.]+$'
     values = []
 
     @classmethod
@@ -69,7 +69,9 @@ class Days(String):
 
 
 class AmPm(String):
-    values = ['am', 'pm', 'a', 'p']
+    am_values = ('am', 'a', 'a.m.', )
+    pm_values = ('pm', 'p', 'p.m.', )
+    values = am_values + pm_values
 
     @classmethod
     def prep_val(cls, val):
@@ -77,7 +79,7 @@ class AmPm(String):
 
     @classmethod
     def is_pm(cls, val):
-        return val.lower() in ('p', 'pm')
+        return val.lower() in cls.pm_values
 
 
 String.subclasses.append(Days)

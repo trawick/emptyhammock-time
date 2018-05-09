@@ -155,6 +155,7 @@ class TestTimeRange(unittest.TestCase):
             ('9pm-12am', t_9pm, t_12am),
             ('9pm', t_9pm, None),
             ('7pm-8:30pm', t_7pm, t_830pm),
+            ('7-9 p.m.', t_7pm, t_9pm),
             ('7pm-8:30', t_7pm, t_830pm),
             ('8:00 pm - 11:00 pm', t_8pm, t_11pm),
             ('7pm-11pm', t_7pm, t_11pm),

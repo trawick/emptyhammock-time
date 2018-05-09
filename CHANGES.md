@@ -2,8 +2,9 @@
 
 ## Version 0.0.12 (not yet released)
 
+* "a.m." and "p.m." are now supported as AM/PM indicators.
 * The parameter `now` has been removed from `parse_time_range()`.  This was not
-  useful since the breaking changes in 0.0.9.
+  useful after the breaking changes in 0.0.9.
 
 ## Version 0.0.11
 
