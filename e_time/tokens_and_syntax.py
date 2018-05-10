@@ -4,43 +4,86 @@ import re
 
 
 class BaseToken(object):
+    """
+    Base class for the various token types that can appear in supported
+    date/time phrases
+    """
     subclasses = []
 
     @classmethod
     def prep_val(cls, val):
+        """
+        Prepare a string value for determining if it has the form
+        represented by this class.
+
+        :param val: the string value to prepare
+        :return: prepared form
+        """
         return val
 
 
 class Comma(BaseToken):
+    """
+    Match and represent a common in the date/time phrase
+    """
     subclasses = []
     pat = r'^,$'
 
 
 class Whitespace(BaseToken):
+    """
+    Match and represent whitespace in the date/time phrase
+    """
     subclasses = []
     pat = r'^[ \t\u00A0]+$'
 
 
 class String(BaseToken):
+    """
+    Match and represent an arbitrary non-numeric string in the date/time phrase
+    """
     subclasses = []
     pat = r'^[A-Za-z.]+$'
     values = []
 
     @classmethod
     def is_it(cls, val):
+        """
+        Check if a string value has the form represented a particular String
+        class/subclass
+
+        :param val: the string to check
+        :return: True/False
+        """
         return cls.prep_val(val) in cls.values
 
 
 class Month(String):
+    """
+    Represent a month string
+    """
     values = [m.lower() for m in calendar.month_name if m != ''] + \
              [m.lower() for m in calendar.month_abbr if m != '']
 
     @classmethod
     def prep_val(cls, val):
+        """
+        Prepare a string value for determining if it has the form
+        represented by this class.
+
+        :param val: the string value to prepare
+        :return: prepared form
+        """
         return val.lower()
 
     @classmethod
     def get_month_number(cls, val):
+        """
+        Return month number (1-12) for a month string
+
+        :param val: the month string
+        :return: month number 1-12
+        """
         orig_val = val
         val = val.lower()
         for month_iterable in (calendar.month_abbr, calendar.month_name):
@@ -51,14 +94,26 @@ class Month(String):
 
 
 class Day(String):
+    """
+    Represent the singular form of a day of the week (string)
+    """
     values = list(calendar.day_name)
 
     @classmethod
     def get_day_of_week(cls, value):
+        """
+        Return day number (0-6) for a day string
+
+        :param value: the day string
+        :return: day number 0-6
+        """
         return cls.values.index(value)
 
 
 class Days(String):
+    """
+    Represent the plural form of a day of the week (string)
+    """
     values = [
         '%ss' % day_name
         for day_name in calendar.day_name
@@ -66,20 +121,42 @@ class Days(String):
 
     @classmethod
     def get_day_of_week(cls, value):
+        """
+        Return day number (0-6) for a day string in plural form
+
+        :param value: the day string
+        :return: day number 0-6
+        """
         return Day.get_day_of_week(value[:-1])
 
 
 class AmPm(String):
+    """
+    Represent an AM/PM indicator
+    """
     am_values = ('am', 'a', 'a.m.', )
     pm_values = ('pm', 'p', 'p.m.', )
     values = am_values + pm_values
 
     @classmethod
     def prep_val(cls, val):
+        """
+        Prepare a string value for determining if it has the form
+        represented by this class.
+
+        :param val: the string value to prepare
+        :return: prepared form
+        """
         return val.lower()
 
     @classmethod
     def is_pm(cls, val):
+        """
+        Check if the specified string represents the PM indicator
+
+        :param val: the AM/PM string
+        :return: True if it represents PM
+        """
         return val.lower() in cls.pm_values
 
 
@@ -90,11 +167,17 @@ String.subclasses.append(Month)
 
 
 class Number(BaseToken):
+    """
+    Represent a number from datetime strings, including a time like "9:00"
+    """
     subclasses = []
     pat = r'^[0-9:]+$'
 
 
 class Dash(BaseToken):
+    """
+    Represent dash/hyphen/etc.
+    """
     subclasses = []
     pat = r'^[-–—]+$'
 

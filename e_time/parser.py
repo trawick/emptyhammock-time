@@ -75,6 +75,27 @@ def _combine_date_times(month, day, year, start_hour, start_minute, stop_hour, s
 
 
 def parse_single_event(when, local_tz=None, now=None):
+    """
+    This function parses a text string describing a single time range on a
+    specified date, returning a tuple of start and end times
+    (datetime.datetime). The year will be set to the current year, unless the
+    optional argument now is provided, in which case the year will be extracted
+    from that datetime. The second time will be None if only one time is
+    specified by the string.
+
+    Example:
+
+    import pytz
+    from e_time import parse_single_event
+    us_eastern = pytz.timezone('US/Eastern')
+    starts_at, _ = parse_single_event('january 13 9:45pm', local_tz=us_eastern)
+    starts_at, ends_at = parse_single_event('january 13 9-11pm', local_tz=us_eastern)
+
+    :param when: string representing the event date and time or time range
+    :param local_tz: optional pytz time zone, for building localized times
+    :param now: optional datetime from which the year will be extracted
+    :return: datetime for start time, None or datetime for stop time
+    """
     parsed = parse(when)
 
     syntax = [t for t, _ in parsed]
@@ -187,6 +208,25 @@ def _get_start_stop_hour_minute(parsed, time_range):
 
 
 def parse_time_range(on_date, time_range, local_tz=None):
+    """
+    This function parses a text string describing a single time range,
+    returning a tuple of start and end times (datetime.datetime) for the date
+    specified in arguments to the function.
+
+    Example:
+
+    from datetime import date
+    import pytz
+    from e_time import parse_time_range
+    us_eastern = pytz.timezone('US/Eastern')
+
+    starts_at, ends_at = parse_time_range(date(2018, 1, 15), '9pm-12am', local_tz=us_eastern)
+
+    :param on_date: datetime.date indicating the applicable date
+    :param time_range: string representing the time range
+    :param local_tz: optional pytz time zone, for building localized times
+    :return: datetime for start time, None or datetime for stop time
+    """
     year, month, day = on_date.year, on_date.month, on_date.day
     parsed = parse(time_range)
     start_hour, start_minute, stop_hour, stop_minute = \
@@ -224,6 +264,14 @@ class _DaysRepeatPerWeekOfMonth(object):
         self.time_range = time_range
 
     def get_occurrences(self, how_long, local_tz, now):
+        """
+        Generate datetimes representing the repetition
+
+        :param how_long:
+        :param local_tz:
+        :param now:
+        :return:
+        """
         current = _get_now(local_tz, now)
         last = current + how_long
         while current < last:
@@ -251,6 +299,14 @@ class _DaysRepeatPerWeek(object):
         self.time_range = time_range
 
     def get_occurrences(self, how_long, local_tz, now):
+        """
+        Generate datetimes representing the repetition
+
+        :param how_long:
+        :param local_tz:
+        :param now:
+        :return:
+        """
         current = _get_now(local_tz, now)
         last = current + how_long
 
