@@ -1,3 +1,4 @@
+""" Implementation of API functions for parsing time strings """
 from datetime import date, datetime, timedelta
 
 from .tokens_and_syntax import (
@@ -22,10 +23,9 @@ def _guess_year(month, day, local_tz, now):
     delta = timedelta(days=9*30)
     if now - then > delta:
         return now.year + 1
-    elif then - now > delta:
+    if then - now > delta:
         return now.year - 1
-    else:
-        return now.year
+    return now.year
 
 
 def guess_date(month, day, local_tz=None, now=None):
@@ -58,8 +58,8 @@ def _convert_date(parsed_date, local_tz=None, now=None):
     return month, day, year
 
 
-def _convert_time(s):
-    values = list(map(int, s.split(':')))
+def _convert_time(time):
+    values = list(map(int, time.split(':')))
     if len(values) == 1:
         return values[0], 0
     return values[0], values[1]
@@ -193,10 +193,10 @@ def parse_time_range(on_date, time_range, local_tz=None):
         _get_start_stop_hour_minute(parsed, time_range)
     try:
         start_time = datetime(year, month, day, start_hour, start_minute)
-    except ValueError as e:
+    except ValueError as ex:
         raise ValueError('Error parsing time range "%s": %s' % (
-            time_range, e
-        )) from e
+            time_range, ex
+        )) from ex
     if local_tz:
         start_time = local_tz.localize(start_time)
 
@@ -328,25 +328,37 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
         phrase,
         parsed, (
             # '1st and 3rd Wednesdays 8:30pm'
-            ([
-                 Number, String, Whitespace, String, Whitespace, Number,
-                 String, Whitespace, Days, Whitespace, Number, AmPm
-             ], _repeat_phrase_1,),
+            (
+                [
+                    Number, String, Whitespace, String, Whitespace, Number,
+                    String, Whitespace, Days, Whitespace, Number, AmPm
+                ],
+                _repeat_phrase_1,
+            ),
             # '1st Fridays 8:30pm-12:30am'
-            ([
-                 Number, String, Whitespace, Days, Whitespace,
-                 Number, AmPm, Dash, Number, AmPm,
-             ], _repeat_phrase_2,),
+            (
+                [
+                    Number, String, Whitespace, Days, Whitespace,
+                    Number, AmPm, Dash, Number, AmPm,
+                ],
+                _repeat_phrase_2,
+            ),
             # 'Every other Thursday 8-11pm'
-            ([
-                String, Whitespace, String, Whitespace, Day, Whitespace,
-                Number, Dash, Number, AmPm
-             ], _repeat_phrase_3,),
+            (
+                [
+                    String, Whitespace, String, Whitespace, Day, Whitespace,
+                    Number, Dash, Number, AmPm
+                ],
+                _repeat_phrase_3,
+            ),
             # 'Thursdays 8pm-12am'
-            ([
-                Days, Whitespace,
-                Number, AmPm, Dash, Number, AmPm,
-             ], _repeat_phrase_4,),
+            (
+                [
+                    Days, Whitespace,
+                    Number, AmPm, Dash, Number, AmPm,
+                ],
+                _repeat_phrase_4,
+            ),
         ),
     )
 

@@ -1,3 +1,4 @@
+""" Logic to split time strings into tokens and determine token types """
 import calendar
 import re
 
@@ -42,10 +43,10 @@ class Month(String):
     def get_month_number(cls, val):
         orig_val = val
         val = val.lower()
-        for i in (calendar.month_abbr, calendar.month_name):
-            for x, m in enumerate(i):
-                if m.lower() == val:
-                    return x
+        for month_iterable in (calendar.month_abbr, calendar.month_name):
+            for month_num, month_str in enumerate(month_iterable):
+                if month_str.lower() == val:
+                    return month_num
         raise ValueError('Invalid month "%s"' % orig_val)
 
 
@@ -98,42 +99,42 @@ class Dash(BaseToken):
     pat = r'^[-–—]+$'
 
 
-types = [Comma, Whitespace, String, Number, Dash]
+TYPES = [Comma, Whitespace, String, Number, Dash]
 
 
 def _find_type(val):
-    for cl in types:
-        if re.match(cl.pat, val):
-            return cl
+    for token_type in TYPES:
+        if re.match(token_type.pat, val):
+            return token_type
     raise ValueError('bad token: "%s"' % val)
 
 
-def _get_token(s):
-    chars = iter(s)
-    st, val = None, ''
+def _get_token(string):
+    chars = iter(string)
+    token_type, token_value = None, ''
     while True:
         try:
-            n = next(chars)
+            next_char = next(chars)
         except StopIteration:
-            yield st, val
+            yield token_type, token_value
             break
-        if st and re.match(st.pat, val + n):
-            val += n
+        if token_type and re.match(token_type.pat, token_value + next_char):
+            token_value += next_char
             continue
-        if val != '':
-            yield st, val
-        val = n
-        st = _find_type(val)
+        if token_value != '':
+            yield token_type, token_value
+        token_value = next_char
+        token_type = _find_type(token_value)
 
 
-def _get_most_specific(t, v):
-    for subclass in t.subclasses:
-        if subclass.is_it(v):
-            return subclass, v
-    return t, v
+def _get_most_specific(token_type, token_value):
+    for subclass in token_type.subclasses:
+        if subclass.is_it(token_value):
+            return subclass, token_value
+    return token_type, token_value
 
 
-def parse(s, ignore_whitespace=True):
+def parse(time, ignore_whitespace=True):
     """
     Parse a string of time-related tokens, including
     * general string
@@ -142,15 +143,15 @@ def parse(s, ignore_whitespace=True):
     * am/pm indicator
     * dash/hyphen
     * number (integer or time of day)
-    :param s: string to be parsed
+    :param time: string to be parsed
     :param ignore_whitespace: whether or not to remove whitespace tokens
         before returning
     :return: sequence of type/value tuples
     """
     tokens = [
-        _get_most_specific(t, v)
-        for t, v in _get_token(s)
-        if t != Whitespace or not ignore_whitespace
+        _get_most_specific(token_type, token_value)
+        for token_type, token_value in _get_token(time)
+        if token_type != Whitespace or not ignore_whitespace
     ]
     return tokens
 
