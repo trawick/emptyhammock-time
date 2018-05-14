@@ -7,7 +7,7 @@ from e_time import (
     parse_repeat_phrase, parse_single_event, parse_time_range,
 )
 from e_time.tokens_and_syntax import (
-    parse, AmPm, Comma, Dash, Day, Days, Month, Number, String,
+    parse, AmPm, Comma, Dash, Day, Days, Midnight, Month, Noon, Number, String,
 )
 
 TIME_ZONE = 'US/Eastern'
@@ -138,6 +138,7 @@ class TestTimeRange(unittest.TestCase):
         year = now.year
 
         t_4am = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 4, 0))
+        t_12pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 12))
         t_1230pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 12, 30))
         t_2pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 14))
         t_7pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 19))
@@ -148,6 +149,8 @@ class TestTimeRange(unittest.TestCase):
         t_11pm = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 23))
         t_12am = PYTZ_TIME_ZONE.localize(datetime(year, month, day, 23) + timedelta(hours=1))
         test_cases = (
+            ('noon-2pm', t_12pm, t_2pm),
+            ('9pm-midnight', t_9pm, t_12am),
             ('4am-12:30pm', t_4am, t_1230pm),
             ('4a-12:30pm', t_4am, t_1230pm),
             ('12:30p-2pm', t_1230pm, t_2pm),
@@ -193,6 +196,8 @@ class TestTokenizing(unittest.TestCase):
             ('9p', (Number, AmPm)),
             ('9 PM - 12 AM', (Number, AmPm, Dash, Number, AmPm)),
             ('7pm-8:30', (Number, AmPm, Dash, Number)),
+            ('9pm-Midnight', (Number, AmPm, Dash, Midnight)),
+            ('noon-4pm', (Noon, Dash, Number, AmPm)),
         )
 
         for sample, syntax in samples:

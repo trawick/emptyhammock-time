@@ -3,6 +3,23 @@ import calendar
 import re
 
 
+class IgnoreCase(object):
+    """
+    Mixin to override default prep_val() method of BaseToken with an
+    implementation that converts the input to lower case.
+    """
+    @classmethod
+    def prep_val(cls, val):
+        """
+        Prepare a string value for determining if it has the form
+        represented by this class.
+
+        :param val: the string value to prepare
+        :return: prepared form
+        """
+        return val.lower()
+
+
 class BaseToken(object):
     """
     Base class for the various token types that can appear in supported
@@ -58,23 +75,12 @@ class String(BaseToken):
         return cls.prep_val(val) in cls.values
 
 
-class Month(String):
+class Month(IgnoreCase, String):
     """
     Represent a month string
     """
     values = [m.lower() for m in calendar.month_name if m != ''] + \
              [m.lower() for m in calendar.month_abbr if m != '']
-
-    @classmethod
-    def prep_val(cls, val):
-        """
-        Prepare a string value for determining if it has the form
-        represented by this class.
-
-        :param val: the string value to prepare
-        :return: prepared form
-        """
-        return val.lower()
 
     @classmethod
     def get_month_number(cls, val):
@@ -130,24 +136,13 @@ class Days(String):
         return Day.get_day_of_week(value[:-1])
 
 
-class AmPm(String):
+class AmPm(IgnoreCase, String):
     """
     Represent an AM/PM indicator
     """
     am_values = ('am', 'a', 'a.m.', )
     pm_values = ('pm', 'p', 'p.m.', )
     values = am_values + pm_values
-
-    @classmethod
-    def prep_val(cls, val):
-        """
-        Prepare a string value for determining if it has the form
-        represented by this class.
-
-        :param val: the string value to prepare
-        :return: prepared form
-        """
-        return val.lower()
 
     @classmethod
     def is_pm(cls, val):
@@ -160,10 +155,26 @@ class AmPm(String):
         return val.lower() in cls.pm_values
 
 
+class Midnight(IgnoreCase, String):
+    """
+    Represent the string midnight
+    """
+    values = ["midnight"]
+
+
+class Noon(IgnoreCase, String):
+    """
+    Represent the string noon
+    """
+    values = ["noon"]
+
+
 String.subclasses.append(Days)
 String.subclasses.append(Day)
 String.subclasses.append(AmPm)
 String.subclasses.append(Month)
+String.subclasses.append(Midnight)
+String.subclasses.append(Noon)
 
 
 class Number(BaseToken):

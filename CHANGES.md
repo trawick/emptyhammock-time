@@ -2,6 +2,9 @@
 
 ## Version 0.0.13 (not yet released)
 
+* `parse_time_range()` now supports "noon" for the start time and
+  "midnight" for the stop time.
+
 ## Version 0.0.12
 
 * "a.m." and "p.m." are now supported as AM/PM indicators.

@@ -2,8 +2,8 @@
 from datetime import date, datetime, timedelta
 
 from .tokens_and_syntax import (
-    Comma, Day, Days, Month, Number, Dash, AmPm, String, Whitespace,
-    evaluate_by_syntax, parse
+    AmPm, Comma, Dash, Day, Days, evaluate_by_syntax, Midnight, Month, Noon,
+    Number, parse, String, Whitespace,
 )
 
 
@@ -195,6 +195,28 @@ def _both_times_stop_indicator(tokens):
     )
 
 
+def _start_time_noon(tokens):
+    values = [token[1] for token in tokens]
+    start_time_value = "12"
+    start_indicator_value = "pm"
+    stop_time_value = values[2]
+    stop_indicator_value = values[3]
+    return _get_time_range(
+        start_time_value, start_indicator_value, stop_time_value, stop_indicator_value
+    )
+
+
+def _stop_time_midnight(tokens):
+    values = [token[1] for token in tokens]
+    start_time_value = values[0]
+    start_indicator_value = values[1]
+    stop_time_value = "12"
+    stop_indicator_value = "am"
+    return _get_time_range(
+        start_time_value, start_indicator_value, stop_time_value, stop_indicator_value
+    )
+
+
 def _get_start_stop_hour_minute(parsed, time_range):
     return evaluate_by_syntax(
         time_range,
@@ -203,6 +225,8 @@ def _get_start_stop_hour_minute(parsed, time_range):
             ([Number, AmPm, Dash, Number, AmPm], _both_times_both_indicators),
             ([Number, AmPm, Dash, Number], _both_times_start_indicator),
             ([Number, Dash, Number, AmPm], _both_times_stop_indicator),
+            ([Number, AmPm, Dash, Midnight], _stop_time_midnight),
+            ([Noon, Dash, Number, AmPm], _start_time_noon),
         )
     )
 
