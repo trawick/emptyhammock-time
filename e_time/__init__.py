@@ -1,4 +1,4 @@
 """ Time-parsing utiilities """
-__version__ = '0.0.13dev'
+__version__ = '0.0.13'
 
 from .parser import guess_date, parse_repeat_phrase, parse_single_event, parse_time_range  # noqa
