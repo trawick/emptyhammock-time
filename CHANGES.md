@@ -2,7 +2,7 @@
 
 ## Version 0.0.14 (not yet released)
 
-* ?
+* Fix bugs in day-of-year sensitive test cases.
 
 ## Version 0.0.13
 

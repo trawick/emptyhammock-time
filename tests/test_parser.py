@@ -9,6 +9,7 @@ from e_time import (
 from e_time.tokens_and_syntax import (
     parse, AmPm, Comma, Dash, Day, Days, Midnight, Month, Noon, Number, String,
 )
+from e_time.parser import _guess_year
 
 TIME_ZONE = 'US/Eastern'
 PYTZ_TIME_ZONE = pytz.timezone(TIME_ZONE)
@@ -21,15 +22,21 @@ class TestSingleEvent(unittest.TestCase):
 
     def test(self):
         starts_at, ends_at = parse_single_event('january 13 9-11pm')
+        # It may decide that January 13 is next year.
+        expected_year = _guess_year(1, 13, PYTZ_TIME_ZONE, self.now)
+        self.assertIn(
+            expected_year,
+            [self.now.year, self.now.year + 1]
+        )
         self.assertEqual(
-            datetime(self.now.year, 1, 13, 21, 0),
+            datetime(expected_year, 1, 13, 21, 0),
             starts_at
         )
         self.assertEqual(
-            datetime(self.now.year, 1, 13, 23, 0),
+            datetime(expected_year, 1, 13, 23, 0),
             ends_at
         )
-        not_now = self.now.replace(year=2015, day=1)
+        not_now = self.now.replace(year=2015, month=1, day=1)
         starts_at, ends_at = parse_single_event(
             'january 13 9-11pm', now=not_now, local_tz=PYTZ_TIME_ZONE
         )
@@ -43,9 +50,15 @@ class TestSingleEvent(unittest.TestCase):
         )
 
     def test_no_stop_time(self):
+        # It may decide that January 13 is next year.
+        expected_year = _guess_year(1, 13, PYTZ_TIME_ZONE, self.now)
+        self.assertIn(
+            expected_year,
+            [self.now.year, self.now.year + 1]
+        )
         starts_at, ends_at = parse_single_event('january 13 9:45pm')
         self.assertEqual(
-            datetime(self.now.year, 1, 13, 21, 45),
+            datetime(expected_year, 1, 13, 21, 45),
             starts_at
         )
         self.assertEqual(
