@@ -137,6 +137,15 @@ class TestSingleEvent(unittest.TestCase):
                 ends_at
             )
 
+    def test_start_end_without_year(self):
+        s = 'June 25   5:00PM — 8:00PM'
+        starts_at, ends_at = parse_single_event(
+            s,
+            now=datetime(2019, 5, 1, 13, 30)
+        )
+        self.assertEqual(datetime(2019, 6, 25, 17, 0), starts_at)
+        self.assertEqual(datetime(2019, 6, 25, 20, 0), ends_at)
+
     def test_bad_string(self):
         with self.assertRaises(ValueError):
             parse_single_event('1 december 31 2017 9-11:30pm')

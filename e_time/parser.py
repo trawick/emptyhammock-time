@@ -107,6 +107,7 @@ def parse_single_event(when, local_tz=None, now=None):
         ([Month, Number, Number, Dash, Number, AmPm], 2),
         ([Month, Number, Number, AmPm], 2),
         ([Month, Number, Number, Number, Dash, Number, AmPm], 3),
+        ([Month, Number, Number, AmPm, Dash, Number, AmPm], 2),
         ([Month, Number, Number, Number, AmPm, Dash, Number, AmPm], 3),
         ([Month, Number, Number, Number, AmPm], 3),
         ([Month, Number, Comma, Number, Number, Dash, Number, AmPm], 4),
