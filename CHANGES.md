@@ -1,6 +1,6 @@
 # Changes and migration requirements
 
-## Version 0.0.14 (not yet released)
+## Version 0.0.14
 
 * `parse_single_event()` now supports strings like *June 25 5:00PM — 8:00PM*.
 * Fix bugs in day-of-year sensitive test cases.
