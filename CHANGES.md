@@ -1,8 +1,8 @@
 # Changes and migration requirements
 
-## Version 0.0.15 (not yet released)
+## Version 0.0.15
 
-* **FIXME**
+* `parse_time_range()` now supports strings like *1st Fridays 20:30-23:30*.
 
 ## Version 0.0.14
 

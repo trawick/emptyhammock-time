@@ -265,6 +265,22 @@ class TestRepeatPhrase(unittest.TestCase):
             list(rv)
         )
 
+    def test_with_one_day_of_week_and_24hr_time(self):
+        now = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 1, 19))
+        phrase = '1st Fridays 20:30-23:30'
+        rv = parse_repeat_phrase(
+            phrase, timedelta(days=40), local_tz=PYTZ_TIME_ZONE, now=now
+        )
+        occurrence_1 = PYTZ_TIME_ZONE.localize(datetime(2018, 3, 2, 20, 30))
+        occurrence_2 = PYTZ_TIME_ZONE.localize(datetime(2018, 4, 6, 20, 30))
+        self.assertEqual(
+            [
+                (occurrence_1, occurrence_1 + timedelta(hours=3)),
+                (occurrence_2, occurrence_2 + timedelta(hours=3)),
+            ],
+            list(rv)
+        )
+
     def test_with_time_range_2(self):
         now = PYTZ_TIME_ZONE.localize(datetime(2018, 2, 22, 12))
         phrase = 'Every other Thursday 8-11pm'

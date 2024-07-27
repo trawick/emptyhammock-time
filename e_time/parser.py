@@ -196,6 +196,14 @@ def _both_times_stop_indicator(tokens):
     )
 
 
+def _both_times_no_indicators(tokens):
+    values = [token[1] for token in tokens]
+    start_time_value = values[0]
+    stop_time_value = values[2]
+    return _get_time_range(
+        start_time_value, "", stop_time_value, ""
+    )
+
 def _start_time_noon(tokens):
     values = [token[1] for token in tokens]
     start_time_value = "12"
@@ -228,6 +236,7 @@ def _get_start_stop_hour_minute(parsed, time_range):
             ([Number, Dash, Number, AmPm], _both_times_stop_indicator),
             ([Number, AmPm, Dash, Midnight], _stop_time_midnight),
             ([Noon, Dash, Number, AmPm], _start_time_noon),
+            ([Number, Dash, Number], _both_times_no_indicators),
         )
     )
 
@@ -392,6 +401,17 @@ def _repeat_phrase_4(tokens):
     return repeat
 
 
+def _repeat_phrase_5(tokens):
+    values = [token[1] for token in tokens]
+    assert len(values[1]) == 2  # 'st', 'nd', 'rd', etc.
+    repeat = _DaysRepeatPerWeekOfMonth(
+        tokens[3],
+        [tokens[0]],
+        values[5] + values[6] + values[7],
+    )
+    return repeat
+
+
 def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
     """
     :param phrase: "1st and 3rd Wednesdays 8:30pm", etc.
@@ -439,6 +459,14 @@ def parse_repeat_phrase(phrase, how_long, local_tz=None, now=None):
                     Number, AmPm, Dash, Number, AmPm,
                 ],
                 _repeat_phrase_4,
+            ),
+            # '1st Fridays 20:30-23:30'
+            (
+                [
+                    Number, String, Whitespace, Days, Whitespace,
+                    Number, Dash, Number,
+                ],
+                _repeat_phrase_5,
             ),
         ),
     )
